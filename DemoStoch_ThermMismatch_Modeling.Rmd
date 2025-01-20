@@ -22,6 +22,7 @@ library(ggplot2)
 library(stats)
 library(reshape2)
 library(gridExtra)
+library(dplyr)
 ```
 
 Source Functions:
@@ -60,7 +61,7 @@ estimate_phi <- function(temperature, q_phi, tmin_phi, tmax_phi) {
 }
 
 # Set q for phi
-q_phi <- 0.01275
+q_phi <- 0.0094
 # Set temperature range
 tmin_phi <- 1
 tmax_phi <- 30
@@ -85,7 +86,7 @@ estimate_alpha <- function(temperature, q_alpha, tmin_alpha, tmax_alpha){
 }
 
 # Set q value for alpha 
-q_alpha <- 0.00855
+q_alpha <- 0.0082
 # Set temperature range
 tmin_alpha <- -5
 tmax_alpha <- 24
@@ -189,8 +190,6 @@ Using this format, we're going to create and test different scenarios, increment
 #### High Mismatch
 ```{r}
 # FIRST: Phi value for High Mismatch
-# Set q for phi (Constant; Same for all)
-q_phi <- 0.01275
 # Set temperature range (High)
 tmin_phi_high <- 1
 tmax_phi_high <- 30
@@ -207,8 +206,6 @@ peak_phi_high <- estimate_phi(temp_peak_phi_high, q_phi, tmin_phi_high, tmax_phi
 
 # ------------------------------------------------
 # NEXT: Alpha value for High Mismatch
-# Set q value for alpha (Constant for all scenarios)
-q_alpha <- 0.00855
 # Set temperature range
 tmin_alpha_high <- -5
 tmax_alpha_high <- 24
@@ -228,8 +225,6 @@ peak_alpha_high <- estimate_alpha(temp_peak_alpha_high, q_alpha, tmin_alpha_high
 #### Mid 1 Mismatch
 ```{r}
 # FIRST: Phi value for Mid 1 Mismatch
-# Set q for phi (Constant; Same for all)
-q_phi <- 0.01275
 # Set temperature range (High)
 tmin_phi_mid1 <- 0
 tmax_phi_mid1 <- 29
@@ -246,8 +241,6 @@ peak_phi_mid1 <- estimate_phi(temp_peak_phi_mid1, q_phi, tmin_phi_mid1, tmax_phi
 
 # ------------------------------------------------
 # NEXT: Alpha value for Mid 1 Mismatch
-# Set q value for alpha (Constant for all scenarios)
-q_alpha <- 0.00855
 # Set temperature range
 tmin_alpha_mid1 <- -4
 tmax_alpha_mid1 <- 25
@@ -266,8 +259,6 @@ peak_alpha_mid1 <- estimate_alpha(temp_peak_alpha_mid1, q_alpha, tmin_alpha_mid1
 #### Mid 2 Mismatch
 ```{r}
 # FIRST: Phi value for Mid 2 Mismatch
-# Set q for phi (Constant; Same for all)
-q_phi <- 0.01275
 # Set temperature range (High)
 tmin_phi_mid2 <- -1
 tmax_phi_mid2 <- 28
@@ -284,8 +275,6 @@ peak_phi_mid2 <- estimate_phi(temp_peak_phi_mid2, q_phi, tmin_phi_mid2, tmax_phi
 
 # ------------------------------------------------
 # NEXT: Alpha value for Mid 2 Mismatch
-# Set q value for alpha (Constant for all scenarios)
-q_alpha <- 0.00855
 # Set temperature range
 tmin_alpha_mid2 <- -3
 tmax_alpha_mid2 <- 26
@@ -304,8 +293,6 @@ peak_alpha_mid2 <- estimate_alpha(temp_peak_alpha_mid2, q_alpha, tmin_alpha_mid2
 #### No Mismatch (i.e., Null Scenario)
 ```{r}
 # FIRST: Phi value for No Mismatch
-# Set q for phi (Constant; Same for all)
-q_phi <- 0.01275
 # Set temperature range (High)
 tmin_phi_null <- -2
 tmax_phi_null <- 27
@@ -322,8 +309,6 @@ peak_phi_null <- estimate_phi(temp_peak_phi_null, q_phi, tmin_phi_null, tmax_phi
 
 # ------------------------------------------------
 # NEXT: Alpha value for No Mismatch
-# Set q value for alpha (Constant for all scenarios)
-q_alpha <- 0.00855
 # Set temperature range
 tmin_alpha_null <- -2
 tmax_alpha_null <- 27
@@ -360,19 +345,25 @@ param_function_plot_data_long <- param_function_plot_data %>%
                names_to = "Parameter", values_to = "Normalized_Value")
 
 quad_param_plot_data <- merge(param_function_plot_data_long, optimal_temps, by = "Scenario")
+quad_param_plot_data$Parameter <- factor(quad_param_plot_data$Parameter, 
+                                          levels = c("Normalized_Phi", "Normalized_Alpha"))
 
 # Create the plot
 quad_param_plot <- ggplot(quad_param_plot_data, 
                           aes(x = Temperature, y = Normalized_Value, color = Parameter)) + 
   geom_line(size = 1) + 
-  facet_wrap(~ Scenario, ncol = 1) +
+  facet_wrap(~ Scenario, ncol = 1,
+             labeller = labeller(Scenario = c("No Mismatch" = "No Mismatch (Functions Overlap)",
+                                              "High Mismatch" = "High Mismatch",
+                                              "Mid 1 Mismatch" = "Mid 1 Mismatch", 
+                                              "Mid 2 Mismatch" = "Mid 2 Mismatch"))) +
   scale_color_manual(values = c("Normalized_Phi" = "red", "Normalized_Alpha" = "blue"),
                      labels = c("Phi (Virus)", "Alpha (Host)")) + 
-  geom_vline(aes(xintercept = Temp_Peak_Phi_opt), linetype = "dashed", col = "red", size = 0.8) + 
-  geom_vline(aes(xintercept = Temp_Peak_Alpha_opt), linetype = "dashed", col = "blue", size = 0.8) +
+  geom_vline(aes(xintercept = Temp_Peak_Phi_opt), linetype = "dashed", col = "red", linewidth = 0.8) + 
+  geom_vline(aes(xintercept = Temp_Peak_Alpha_opt), linetype = "dashed", col = "blue", linewidth = 0.8) +
   theme_bw() + 
-  labs(x = "Temperature (°C)", y = "Normalized Parameter Values", 
-       color = "Parameter", title = "Thermal Mismatch Scenarios") +
+  labs(x = "Temperature (°C)", y = "Parameter Values (Normalized)", 
+       color = "Parameter:", title = "Thermal Mismatch Scenarios") +
   theme(strip.text = element_text(size = 10, face = "bold"), 
         legend.position = "bottom",
         plot.title = element_text(hjust = 0.5, size = 14, face = "bold"))
@@ -384,3 +375,305 @@ quad_param_plot
 
 First, setup the code to run model simulations. Then use the parameter values (for phi and alpha) calculated above to run the model at the different scenarios and along the thermal gradient. 
 
+Initial setup of universal variables/parameters: 
+```{r}
+# Set time/tau: 
+tau <- 1 # leap size
+t_max <- 40 # days
+n_times <- floor(t_max/tau)
+t_vec <- seq(1, t_max, length.out = n_times)
+
+# Vector to store Viral and Immune Load
+V_vec <- vector(mode = "numeric", length = n_times)
+Z_vec <- vector(mode = "numeric", length = n_times)
+
+z_scalar <- 1000
+
+death_threshold <- 3000
+clearance_threshold <- 0
+
+# Set initial values
+V_vec[1] <- 250                      # Initial viral density 
+Z_vec[1] <- rpois(1, 0.35*z_scalar)  # Initial immune component density 
+
+# Set number of iterations per scenario per temperature: 
+num_sims <- 100
+
+# Set temperatures to check: 
+temp_checks <- c(10, 12.5, 15)
+```
+
+#### High mismatch
+```{r, warning=FALSE}
+# Set parameters for high mismatch scenario
+params_high <- list(
+  phi = estimate_phi(temp_checks[1], q_phi, tmin_phi_high, tmax_phi_high), # Viral replication rate (estimate_phi function)
+  alpha = estimate_alpha(temp_checks[1], q_alpha, tmin_alpha_high, tmax_alpha_high), # Mass-action attack rate (estimate_alpha function)
+  delta = 1.29,            # Rate of decline that ensures return of immune system to homeostasis
+  psi = 0.91,              # Immune component growth rate in response to virus
+  gamma = 0.13,            # Half saturation constant
+  N_z = 1.29 * 0.35,       # Rate of production that ensures return of immune system to homeostasis
+  z_scalar = z_scalar      # To scale the immune variables
+)
+
+# Store results for high mismatch: 
+results_high <- list()
+
+# Loop through each set temperature for high mismatch scenario: 
+for (temp in temp_checks) {
+  # Set temperature-specific params
+  params_high$phi <- estimate_phi(temp, q_phi, tmin_phi_high, tmax_phi_high)
+  params_high$alpha <- estimate_alpha(temp, q_alpha, tmin_alpha_high, tmax_alpha_high)
+  
+  # Initialize a list to store simulation results for the current temperature
+  temp_results_high <- vector("list", num_sims)
+  
+  # Run model for all simulations: 
+  for (sim in 1:num_sims) {
+    sim_results <- model_simulation(
+      V_vec = V_vec, 
+      Z_vec = Z_vec, 
+      params = params_high,
+      death_threshold = death_threshold,
+      clearance_threshold = clearance_threshold
+    )
+    
+    # Store the simulation results as a list
+    temp_results_high[[sim]] <- list(Simulation = sim, 
+                                     V_vec = sim_results$V_vec, 
+                                     Z_vec = sim_results$Z_vec)
+  }
+  
+  # Convert the list of simulation results to a data frame
+  temp_results_high_df <- do.call(rbind, lapply(temp_results_high, as.data.frame))
+  
+  # Add results for this temperature to the overall list
+  results_high[[paste0("Temp", temp)]] <- temp_results_high_df
+}
+
+```
+
+#### Mid 1 Mismatch
+```{r, warning=FALSE}
+# Set parameters for mid 1 mismatch scenario
+params_mid1 <- list(
+  phi = estimate_phi(temp_checks[1], q_phi, tmin_phi_mid1, tmax_phi_mid1), # Viral replication rate (estimate_phi function)
+  alpha = estimate_alpha(temp_checks[1], q_alpha, tmin_alpha_mid1, tmax_alpha_mid1), # Mass-action attack rate (estimate_alpha function)
+  delta = 1.29,            # Rate of decline that ensures return of immune system to homeostasis
+  psi = 0.91,              # Immune component growth rate in response to virus
+  gamma = 0.13,            # Half saturation constant
+  N_z = 1.29 * 0.35,       # Rate of production that ensures return of immune system to homeostasis
+  z_scalar = z_scalar      # To scale the immune variables
+)
+
+# Store results for mid 1 mismatch: 
+results_mid1 <- list()
+
+# Loop through each set temperature for mid 1 mismatch scenario: 
+for (temp in temp_checks) {
+  # Set temperature-specific params
+  params_mid1$phi <- estimate_phi(temp, q_phi, tmin_phi_mid1, tmax_phi_mid1)
+  params_mid1$alpha <- estimate_alpha(temp, q_alpha, tmin_alpha_mid1, tmax_alpha_mid1)
+  
+  # Initialize a list to store simulation results for the current temperature
+  temp_results_mid1 <- vector("list", num_sims)
+  
+  # Run model for all simulations: 
+  for (sim in 1:num_sims) {
+    sim_results <- model_simulation(
+      V_vec = V_vec, 
+      Z_vec = Z_vec, 
+      params = params_mid1,
+      death_threshold = death_threshold,
+      clearance_threshold = clearance_threshold
+    )
+    
+    # Store the simulation results as a list
+    temp_results_mid1[[sim]] <- list(Simulation = sim, 
+                                     V_vec = sim_results$V_vec, 
+                                     Z_vec = sim_results$Z_vec)
+  }
+  
+  # Convert the list of simulation results to a data frame
+  temp_results_mid1_df <- do.call(rbind, lapply(temp_results_mid1, as.data.frame))
+  
+  # Add results for this temperature to the overall list
+  results_mid1[[paste0("Temp", temp)]] <- temp_results_mid1_df
+}
+
+```
+
+#### Mid 2 Mismatch
+```{r, warning=FALSE}
+# Set parameters for mid 2 mismatch scenario
+params_mid2 <- list(
+  phi = estimate_phi(temp_checks[1], q_phi, tmin_phi_mid2, tmax_phi_mid2), # Viral replication rate (estimate_phi function)
+  alpha = estimate_alpha(temp_checks[1], q_alpha, tmin_alpha_mid2, tmax_alpha_mid2), # Mass-action attack rate (estimate_alpha function)
+  delta = 1.29,            # Rate of decline that ensures return of immune system to homeostasis
+  psi = 0.91,              # Immune component growth rate in response to virus
+  gamma = 0.13,            # Half saturation constant
+  N_z = 1.29 * 0.35,       # Rate of production that ensures return of immune system to homeostasis
+  z_scalar = z_scalar      # To scale the immune variables
+)
+
+# Store results for mid 2 mismatch: 
+results_mid2 <- list()
+
+# Loop through each set temperature for mid 2 mismatch scenario: 
+for (temp in temp_checks) {
+  # Set temperature-specific params
+  params_mid2$phi <- estimate_phi(temp, q_phi, tmin_phi_mid2, tmax_phi_mid2)
+  params_mid2$alpha <- estimate_alpha(temp, q_alpha, tmin_alpha_mid2, tmax_alpha_mid2)
+  
+  # Initialize a list to store simulation results for the current temperature
+  temp_results_mid2 <- vector("list", num_sims)
+  
+  # Run model for all simulations: 
+  for (sim in 1:num_sims) {
+    sim_results <- model_simulation(
+      V_vec = V_vec, 
+      Z_vec = Z_vec, 
+      params = params_mid2,
+      death_threshold = death_threshold,
+      clearance_threshold = clearance_threshold
+    )
+    
+    # Store the simulation results as a list
+    temp_results_mid2[[sim]] <- list(Simulation = sim, 
+                                     V_vec = sim_results$V_vec, 
+                                     Z_vec = sim_results$Z_vec)
+  }
+  
+  # Convert the list of simulation results to a data frame
+  temp_results_mid2_df <- do.call(rbind, lapply(temp_results_mid2, as.data.frame))
+  
+  # Add results for this temperature to the overall list
+  results_mid2[[paste0("Temp", temp)]] <- temp_results_mid2_df
+}
+```
+
+#### No Mismatch (i.e., Null hypothesis)
+```{r, warning=FALSE}
+# Set parameters for no mismatch scenario
+params_null <- list(
+  phi = estimate_phi(temp_checks[1], q_phi, tmin_phi_null, tmax_phi_null), # Viral replication rate (estimate_phi function)
+  alpha = estimate_alpha(temp_checks[1], q_alpha, tmin_alpha_null, tmax_alpha_null), # Mass-action attack rate (estimate_alpha function)
+  delta = 1.29,            # Rate of decline that ensures return of immune system to homeostasis
+  psi = 0.91,              # Immune component growth rate in response to virus
+  gamma = 0.13,            # Half saturation constant
+  N_z = 1.29 * 0.35,       # Rate of production that ensures return of immune system to homeostasis
+  z_scalar = z_scalar      # To scale the immune variables
+)
+
+# Store results for mid 2 mismatch: 
+results_null <- list()
+
+# Loop through each set temperature for mid 2 mismatch scenario: 
+for (temp in temp_checks) {
+  # Set temperature-specific params
+  params_null$phi <- estimate_phi(temp, q_phi, tmin_phi_null, tmax_phi_null)
+  params_null$alpha <- estimate_alpha(temp, q_alpha, tmin_alpha_null, tmax_alpha_null)
+  
+  # Initialize a list to store simulation results for the current temperature
+  temp_results_null <- vector("list", num_sims)
+  
+  # Run model for all simulations: 
+  for (sim in 1:num_sims) {
+    sim_results <- model_simulation(
+      V_vec = V_vec, 
+      Z_vec = Z_vec, 
+      params = params_null,
+      death_threshold = death_threshold,
+      clearance_threshold = clearance_threshold
+    )
+    
+    # Store the simulation results as a list
+    temp_results_null[[sim]] <- list(Simulation = sim, 
+                                     V_vec = sim_results$V_vec, 
+                                     Z_vec = sim_results$Z_vec)
+  }
+  
+  # Convert the list of simulation results to a data frame
+  temp_results_null_df <- do.call(rbind, lapply(temp_results_null, as.data.frame))
+  
+  # Add results for this temperature to the overall list
+  results_null[[paste0("Temp", temp)]] <- temp_results_null_df
+}
+```
+
+#### Create plot with all results (4 Scenarios, 3 Temps each)
+```{r}
+# Function to combine the results
+combine_results <- function(results_list, scenario_name){
+  do.call(rbind, lapply(names(results_list), function(temp_name){
+    temp_data <- results_list[[temp_name]]
+    temp_data$Scenario <- scenario_name
+    temp_data$Temperature <- as.numeric(gsub("Temp", "", temp_name))
+    return(temp_data)
+  }))
+}
+
+# All scenarios to one data frame
+all_combined_results <- rbind(
+  combine_results(results_high, "High"),
+  combine_results(results_mid1, "Mid1"),
+  combine_results(results_mid2, "Mid2"),
+  combine_results(results_null, "Null")
+)
+
+# Summary stats for Confidence intervals and medians for plotting
+summary_results <- all_combined_results %>%
+  tidyr::unnest(cols = c(V_vec, Z_vec)) %>%
+  group_by(Scenario, Temperature) %>%
+  mutate(Day = rep(1:40, times = n() / 40)) %>% 
+  group_by(Scenario, Temperature, Day) %>%
+  summarise(
+    V_median = median(V_vec, na.rm = TRUE),
+    V_low = quantile(V_vec, 0.025, na.rm = TRUE),
+    V_high = quantile(V_vec, 0.975, na.rm = TRUE),
+    Z_median = median(Z_vec, na.rm = TRUE),
+    Z_low = quantile(Z_vec, 0.025, na.rm = TRUE),
+    Z_high = quantile(Z_vec, 0.975, na.rm = TRUE),
+    .groups = "drop"
+  )
+```
+
+```{r, warning = FALSE, fig.height = 8, fig.width=10}
+# Create the figure (facet_wrap, rows are scenarios, columns are temperatures)
+scenario_by_temp_plot <- ggplot(summary_results, aes(x = Day)) + 
+  # V_vec
+  geom_ribbon(aes(ymin = V_low, ymax = V_high, fill = "V_vec"), alpha = 0.3) + 
+  geom_line(aes(y = V_median, color = "V_vec"), size = 1.2) + 
+  # Z_vec
+  geom_ribbon(aes(ymin = Z_low, ymax = Z_high, fill = "Z_vec"), alpha = 0.3) + 
+  geom_line(aes(y = Z_median, color = "Z_vec"), size = 1.2) + 
+  # facet by scenario and temperature
+  facet_grid(Scenario ~ Temperature,
+             labeller = labeller(Temperature = function(x) paste0(x, " °C"),
+                                 Scenario = function(x) paste0(x, " Mismatch"),
+                                 )) +
+  # aesthetics:
+  scale_fill_manual(
+    name = "Variable: ",
+    values = c("V_vec" = "red", "Z_vec" = "blue"),
+    labels = c("Viral Cell Load", "Immune Cell Load")
+  ) + 
+  scale_color_manual(
+    name = "Variable: ",
+    values = c("V_vec" = "red", "Z_vec" = "blue"),
+    labels = c("Viral Cell Load", "Immune Cell Load")
+  ) + 
+  labs(title = "Simulation Results by Mismatch Scenario and by Temperature",
+       x = "Days",
+       y = "Within-Host Cell Density/Load") + 
+  theme_bw(base_size = 14) + 
+  theme(legend.position = "bottom", 
+        legend.box = "horizontal",
+        panel.grid = element_line(color = "gray90"),
+        plot.title = element_text(hjust = 0.5, size = 14))
+
+scenario_by_temp_plot
+```
+
+
+# Track the Proportion of deaths across thermal gradient
