@@ -50,7 +50,7 @@ $$
 
 ```{r}
 # Generate temperature range
-temperatures <- seq(9.5, 15.5, length.out = 50)
+temperatures <- seq(9, 16, length.out = 50)
 ```
 
 Estimating the Range of Parameter Phi (Viral Replication Rate)
@@ -401,7 +401,7 @@ Z_vec[1] <- rpois(1, 0.35*z_scalar)  # Initial immune component density
 num_sims <- 100
 
 # Set temperatures to check: 
-temp_checks <- c(10, 12.5, 15)
+temp_checks <- c(9.5, 12.5, 15.5)
 ```
 
 #### High mismatch
