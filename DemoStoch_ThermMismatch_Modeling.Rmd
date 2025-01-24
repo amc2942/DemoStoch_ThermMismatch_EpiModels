@@ -226,9 +226,9 @@ peak_alpha_high <- estimate_alpha(temp_peak_alpha_high, q_alpha, tmin_alpha_high
 #### Mid 1 Mismatch
 ```{r}
 # FIRST: Phi value for Mid 1 Mismatch
-# Set temperature range (High)
-tmin_phi_mid1 <- 0
-tmax_phi_mid1 <- 29
+# Set temperature range
+tmin_phi_mid1 <- 0.25
+tmax_phi_mid1 <- 29.25
 
 # Calculate corresponding values of phi
 phi_values_mid1 <- estimate_phi(temperatures, q_phi, tmin_phi_mid1, tmax_phi_mid1)
@@ -243,8 +243,8 @@ peak_phi_mid1 <- estimate_phi(temp_peak_phi_mid1, q_phi, tmin_phi_mid1, tmax_phi
 # ------------------------------------------------
 # NEXT: Alpha value for Mid 1 Mismatch
 # Set temperature range
-tmin_alpha_mid1 <- -4
-tmax_alpha_mid1 <- 25
+tmin_alpha_mid1 <- -4.25
+tmax_alpha_mid1 <- 24.75
 
 # Calculate corresponding values of alpha
 alpha_values_mid1 <- estimate_alpha(temperatures, q_alpha, tmin_alpha_mid1, tmax_alpha_mid1)
@@ -260,9 +260,9 @@ peak_alpha_mid1 <- estimate_alpha(temp_peak_alpha_mid1, q_alpha, tmin_alpha_mid1
 #### Mid 2 Mismatch
 ```{r}
 # FIRST: Phi value for Mid 2 Mismatch
-# Set temperature range (High)
-tmin_phi_mid2 <- -1
-tmax_phi_mid2 <- 28
+# Set temperature range 
+tmin_phi_mid2 <- -0.5
+tmax_phi_mid2 <- 28.5
 
 # Calculate corresponding values of phi
 phi_values_mid2 <- estimate_phi(temperatures, q_phi, tmin_phi_mid2, tmax_phi_mid2)
@@ -277,8 +277,8 @@ peak_phi_mid2 <- estimate_phi(temp_peak_phi_mid2, q_phi, tmin_phi_mid2, tmax_phi
 # ------------------------------------------------
 # NEXT: Alpha value for Mid 2 Mismatch
 # Set temperature range
-tmin_alpha_mid2 <- -3
-tmax_alpha_mid2 <- 26
+tmin_alpha_mid2 <- -3.5
+tmax_alpha_mid2 <- 25.5
 
 # Calculate corresponding values of alpha
 alpha_values_mid2 <- estimate_alpha(temperatures, q_alpha, tmin_alpha_mid2, tmax_alpha_mid2)
@@ -291,10 +291,44 @@ temp_peak_alpha_mid2 <- (tmin_alpha_mid2 + tmax_alpha_mid2) / 2
 peak_alpha_mid2 <- estimate_alpha(temp_peak_alpha_mid2, q_alpha, tmin_alpha_mid2, tmax_alpha_mid2)
 ```
 
+#### Mid 3 Mismatch
+```{r}
+# FIRST: Phi value for Mid 3 Mismatch
+# Set temperature range 
+tmin_phi_mid3 <- -1.25
+tmax_phi_mid3 <- 27.75
+
+# Calculate corresponding values of phi
+phi_values_mid3 <- estimate_phi(temperatures, q_phi, tmin_phi_mid3, tmax_phi_mid3)
+
+# Min-Max normalization
+norm_phi_mid3 <- (phi_values_mid3 - min(phi_values_mid3)) / (max(phi_values_mid3) - min(phi_values_mid3))
+
+# Peak value of the phi Parameter
+temp_peak_phi_mid3 <- (tmin_phi_mid3 + tmax_phi_mid3) / 2
+peak_phi_mid3 <- estimate_phi(temp_peak_phi_mid3, q_phi, tmin_phi_mid3, tmax_phi_mid3)
+
+# ------------------------------------------------
+# NEXT: Alpha value for Mid 3 Mismatch
+# Set temperature range
+tmin_alpha_mid3 <- -2.75
+tmax_alpha_mid3 <- 26.25
+
+# Calculate corresponding values of alpha
+alpha_values_mid3 <- estimate_alpha(temperatures, q_alpha, tmin_alpha_mid3, tmax_alpha_mid3)
+
+# Min-Max Normalization
+norm_alpha_mid3 <- (alpha_values_mid3 - min(alpha_values_mid3)) / (max(alpha_values_mid3) - min(alpha_values_mid3))
+
+# Peak value of the alpha Parameter
+temp_peak_alpha_mid3 <- (tmin_alpha_mid3 + tmax_alpha_mid3) / 2
+peak_alpha_mid3 <- estimate_alpha(temp_peak_alpha_mid3, q_alpha, tmin_alpha_mid3, tmax_alpha_mid3)
+```
+
 #### No Mismatch (i.e., Null Scenario)
 ```{r}
 # FIRST: Phi value for No Mismatch
-# Set temperature range (High)
+# Set temperature range 
 tmin_phi_null <- -2
 tmax_phi_null <- 27
 
@@ -326,18 +360,18 @@ peak_alpha_null <- estimate_alpha(temp_peak_alpha_null, q_alpha, tmin_alpha_null
 ```
 
 #### Now we can plot the scenarios: 
-```{r, fig.height = 8, fig.width = 5}
+```{r, fig.height = 10, fig.width = 5}
 param_function_plot_data <- data.frame(
-  Temperature = rep(temperatures, 4), 
-  Normalized_Phi = c(norm_phi_high, norm_phi_mid1, norm_phi_mid2, norm_phi_null), 
-  Normalized_Alpha = c(norm_alpha_high, norm_alpha_mid1, norm_alpha_mid2, norm_alpha_null),
-  Scenario = factor(rep(c("High Mismatch", "Mid 1 Mismatch", "Mid 2 Mismatch", "No Mismatch"), each = length(temperatures)))
+  Temperature = rep(temperatures, 5), 
+  Normalized_Phi = c(norm_phi_high, norm_phi_mid1, norm_phi_mid2, norm_phi_mid3, norm_phi_null), 
+  Normalized_Alpha = c(norm_alpha_high, norm_alpha_mid1, norm_alpha_mid2, norm_alpha_mid3, norm_alpha_null),
+  Scenario = factor(rep(c("High Mismatch", "Mid 1 Mismatch", "Mid 2 Mismatch", "Mid 3 Mismatch", "No Mismatch"), each = length(temperatures)))
 )
 
 optimal_temps <- data.frame(
-  Scenario = factor(c("High Mismatch", "Mid 1 Mismatch", "Mid 2 Mismatch", "No Mismatch")),
-  Temp_Peak_Phi_opt = c(temp_peak_phi_high, temp_peak_phi_mid1, temp_peak_phi_mid2, temp_peak_phi_null),
-  Temp_Peak_Alpha_opt = c(temp_peak_alpha_high, temp_peak_alpha_mid1, temp_peak_alpha_mid2, temp_peak_alpha_null)
+  Scenario = factor(c("High Mismatch", "Mid 1 Mismatch", "Mid 2 Mismatch", "Mid 3 Mismatch", "No Mismatch")),
+  Temp_Peak_Phi_opt = c(temp_peak_phi_high, temp_peak_phi_mid1, temp_peak_phi_mid2, temp_peak_phi_mid3, temp_peak_phi_null),
+  Temp_Peak_Alpha_opt = c(temp_peak_alpha_high, temp_peak_alpha_mid1, temp_peak_alpha_mid2, temp_peak_alpha_mid3, temp_peak_alpha_null)
 )
 
 # pivot for ggplot
@@ -352,12 +386,13 @@ quad_param_plot_data$Parameter <- factor(quad_param_plot_data$Parameter,
 # Create the plot
 quad_param_plot <- ggplot(quad_param_plot_data, 
                           aes(x = Temperature, y = Normalized_Value, color = Parameter)) + 
-  geom_line(size = 1) + 
+  geom_line(linewidth = 1) + 
   facet_wrap(~ Scenario, ncol = 1,
              labeller = labeller(Scenario = c("No Mismatch" = "No Mismatch (Functions Overlap)",
                                               "High Mismatch" = "High Mismatch",
                                               "Mid 1 Mismatch" = "Mid 1 Mismatch", 
-                                              "Mid 2 Mismatch" = "Mid 2 Mismatch"))) +
+                                              "Mid 2 Mismatch" = "Mid 2 Mismatch",
+                                              "Mid 3 Mismatch" = "Mid 3 Mismatch"))) +
   scale_color_manual(values = c("Normalized_Phi" = "red", "Normalized_Alpha" = "blue"),
                      labels = c("Phi (Virus)", "Alpha (Host)")) + 
   geom_vline(aes(xintercept = Temp_Peak_Phi_opt), linetype = "dashed", col = "red", linewidth = 0.8) + 
@@ -365,11 +400,17 @@ quad_param_plot <- ggplot(quad_param_plot_data,
   theme_bw() + 
   labs(x = "Temperature (°C)", y = "Parameter Values (Normalized)", 
        color = "Parameter:", title = "Thermal Mismatch Scenarios") +
-  theme(strip.text = element_text(size = 10, face = "bold"), 
+  theme(strip.text = element_text(size = 12, face = "bold"), 
         legend.position = "bottom",
-        plot.title = element_text(hjust = 0.5, size = 14, face = "bold"))
+        plot.title = element_text(hjust = 0.5, size = 18, face = "bold"),
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        legend.text = element_text(size = 12))
 
 quad_param_plot
+
+#ggsave("Figures/quad_param_plot.pdf", plot = quad_param_plot,
+#       device = "pdf", width = 5, height = 10)
 ```
 
 # Running the Model (Multiple Temperatures and Multiple Scenarios)
@@ -556,6 +597,56 @@ for (temp in temp_checks) {
 }
 ```
 
+#### Mid 3 Mismatch
+```{r, warning=FALSE}
+# Store results for mid 3 mismatch: 
+results_mid3 <- list()
+
+# Loop through each set temperature for mid 3 mismatch scenario: 
+for (temp in temp_checks) {
+  
+  # Temp-specific parameters: 
+  phi_mid3 <- estimate_phi(temp, q_phi, tmin_phi_mid3, tmax_phi_mid3)
+  alpha_mid3 <- estimate_alpha(temp, q_phi, tmin_alpha_mid3, tmax_alpha_mid3)
+  
+  # All Parms: 
+  params_mid3 <- list(
+    phi = phi_mid3,
+    alpha = alpha_mid3,
+    delta = 1.29,            
+    psi = 0.91,              
+    gamma = 0.13,            
+    N_z = 1.29 * 0.35,       
+    z_scalar = z_scalar
+  )
+  
+  # Initialize a list to store simulation results for the current temperature
+  temp_results_mid3 <- vector("list", num_sims)
+  
+  # Run model for all simulations: 
+  for (sim in 1:num_sims) {
+    sim_results <- model_simulation(
+      V_vec = V_vec, 
+      Z_vec = Z_vec, 
+      params = params_mid3,
+      death_threshold = death_threshold,
+      clearance_threshold = clearance_threshold
+    )
+    
+    # Store the simulation results as a list
+    temp_results_mid3[[sim]] <- list(Simulation = sim, 
+                                     V_vec = sim_results$V_vec, 
+                                     Z_vec = sim_results$Z_vec)
+  }
+  
+  # Convert the list of simulation results to a data frame
+  temp_results_mid3_df <- do.call(rbind, lapply(temp_results_mid3, as.data.frame))
+  
+  # Add results for this temperature to the overall list
+  results_mid3[[paste0("Temp", temp)]] <- temp_results_mid3_df
+}
+```
+
 #### No Mismatch (i.e., Null hypothesis)
 ```{r, warning=FALSE}
 # Store results for mid 2 mismatch: 
@@ -622,6 +713,7 @@ all_combined_results <- rbind(
   combine_results(results_high, "High"),
   combine_results(results_mid1, "Mid1"),
   combine_results(results_mid2, "Mid2"),
+  combine_results(results_mid3, "Mid3"),
   combine_results(results_null, "Null")
 )
 
@@ -642,9 +734,10 @@ summary_results <- all_combined_results %>%
   )
 ```
 
-```{r, warning = FALSE, fig.height = 8, fig.width=10}
+Geom_ribbon() to show 95% CI and variability for each scenario/temp plot
+```{r, warning = FALSE, fig.height = 10, fig.width=10}
 # Create the figure (facet_wrap, rows are scenarios, columns are temperatures)
-scenario_by_temp_plot <- ggplot(summary_results, aes(x = Day)) + 
+scenario_by_temp_plot_variability <- ggplot(summary_results, aes(x = Day)) + 
   # V_vec
   geom_ribbon(aes(ymin = V_low, ymax = V_high, fill = "V_vec"), alpha = 0.3) + 
   geom_line(aes(y = V_median, color = "V_vec"), size = 1.2) + 
@@ -667,16 +760,68 @@ scenario_by_temp_plot <- ggplot(summary_results, aes(x = Day)) +
     values = c("V_vec" = "red", "Z_vec" = "blue"),
     labels = c("Viral Cell Load", "Immune Cell Load")
   ) + 
-  labs(title = "Simulation Results by Mismatch Scenario and by Temperature",
+  labs(title = "Results by Mismatch Scenario and by Temperature (95% CI)",
        x = "Days",
        y = "Within-Host Cell Density/Load") + 
-  theme_bw(base_size = 14) + 
+  theme_bw() + 
   theme(legend.position = "bottom", 
         legend.box = "horizontal",
         panel.grid = element_line(color = "gray90"),
-        plot.title = element_text(hjust = 0.5, size = 14, face = "bold"))
+        plot.title = element_text(hjust = 0.5, size = 18, face = "bold"),
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        strip.text = element_text(size = 12, face = "bold"),
+        legend.text = element_text(size = 12))
 
-scenario_by_temp_plot
+scenario_by_temp_plot_variability
+
+#ggsave("Figures/scenario_by_temp_plot_variability.pdf", plot = scenario_by_temp_plot_variability,
+#       device = "pdf", width = 10, height = 10)
+```
+
+Now a plot to show all individual simulations: 
+```{r, warning=FALSE, fig.height=10, fig.width=10}
+individual_simulations <- all_combined_results %>% 
+  tidyr::unnest(cols = c(V_vec, Z_vec)) %>% 
+  mutate(Day = rep(1:40, times = n() / 40),
+             Simulation_ID = rep(1:100, each = 40, times = length(unique(Scenario)) * length(unique(Temperature)))
+)
+
+# Create the plot
+scenario_by_temp_plot_individualsims <- ggplot(individual_simulations, aes(x = Day)) +
+  # V_vec
+  geom_line(aes(y = V_vec, group = interaction(Scenario, Temperature, Simulation_ID), color = "V_vec"),
+            alpha = 0.4, linewidth = 0.5) +
+  # Z_vec
+  geom_line(aes(y = Z_vec, group = interaction(Scenario, Temperature, Simulation_ID), color = "Z_vec"),
+            alpha = 0.4, linewidth = 0.5) + 
+  # Facet by scenario and temperature
+  facet_grid(Scenario ~ Temperature, 
+             labeller = labeller(Temperature = function(x) paste0(x, " °C"),
+                                 Scenario = function(x) paste0(x, " Mismatch"))) + 
+  # Aesthetics:
+  scale_color_manual(
+    name = "Variable: ",
+    values = c("V_vec" = "red", "Z_vec" = "blue"),
+    labels = c("Viral Cell Load", "Immune Cell Load")
+  ) + 
+  labs(title = "Results by Mismatch Scenario and Temperature (All Sims)",
+       x = "Days", 
+       y = "Within-Host Cell Density/Load") + 
+  theme_bw() + 
+  theme(legend.position = "bottom", 
+        legend.box = "horizontal",
+        panel.grid = element_line(color = "gray90"),
+        plot.title = element_text(hjust = 0.5, size = 18, face = "bold"),
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        strip.text = element_text(size = 12, face = "bold"),
+        legend.text = element_text(size = 12))
+
+scenario_by_temp_plot_individualsims
+
+#ggsave("Figures/scenario_by_temp_plot_individualsims.pdf", plot = scenario_by_temp_plot_individualsims,
+#       device = "pdf", width = 10, height = 10)
 ```
 
 
@@ -821,6 +966,52 @@ for(temp_idx in seq_along(temperatures)) {
 }
 ```
 
+#### Mid 3 Mismatch: 
+```{r, warning=FALSE}
+# Data frame to store death proportion for mid3 mismatch 
+death_prop_mid3 <- data.frame(Temperature = temperatures, Proportion_Deaths = NA)
+
+# Now loop through each temperature and run model simulations
+for(temp_idx in seq_along(temperatures)) {
+  temp <- temperatures[temp_idx]
+  
+  # Temp-specific parameters: 
+  phi_mid3 <- estimate_phi(temp, q_phi, tmin_phi_mid3, tmax_phi_mid3)
+  alpha_mid3 <- estimate_alpha(temp, q_phi, tmin_alpha_mid3, tmax_alpha_mid3)
+  
+  # All Parms: 
+  params_mid3 <- list(
+    phi = phi_mid3,
+    alpha = alpha_mid3,
+    delta = 1.29,            
+    psi = 0.91,              
+    gamma = 0.13,            
+    N_z = 1.29 * 0.35,       
+    z_scalar = z_scalar
+  )
+  
+  # Simulations and track deaths
+  death_count <- 0
+  for (sim in 1:num_sims){
+    sim_results <- model_simulation(
+      V_vec = V_vec,
+      Z_vec = Z_vec,
+      params = params_mid3, 
+      death_threshold = death_threshold,
+      clearance_threshold = clearance_threshold
+    )
+    
+    # Was death_threshold reached?
+    if(max(sim_results$V_vec, na.rm = TRUE) >= death_threshold){
+      death_count <- death_count + 1
+    }
+  }
+  
+  # Proportion of death for this temperature
+  death_prop_mid3$Proportion_Deaths[temp_idx] <- death_count/num_sims
+}
+```
+
 #### Null Mismatch: 
 ```{r, warning=FALSE}
 # Data frame to store death proportion for null mismatch 
@@ -868,15 +1059,16 @@ for(temp_idx in seq_along(temperatures)) {
 ```
 
 #### Plot the proportion of death at each scenario
-```{r, fig.height=8, fig.width=6}
+```{r, fig.height=10, fig.width=7}
 # Combine results to one data.frame
 death_data <- data.frame(
-  Temperature = rep(temperatures, times = 4),
+  Temperature = rep(temperatures, times = 5),
   Proportion_Deaths = c(death_prop_high$Proportion_Deaths,
                         death_prop_mid1$Proportion_Deaths,
                         death_prop_mid2$Proportion_Deaths,
+                        death_prop_mid3$Proportion_Deaths,
                         death_prop_null$Proportion_Deaths),
-  Scenario = rep(c("High Mismatch", "Mid 1 Mismatch", "Mid 2 Mismatch", "No Mismatch"), each = length(temperatures))
+  Scenario = rep(c("High Mismatch", "Mid 1 Mismatch", "Mid 2 Mismatch", "Mid 3 Mismatch", "No Mismatch"), each = length(temperatures))
 )
 
 death_data$Legend_Label <- "Proportion Deaths"
@@ -888,19 +1080,26 @@ death_plot <- ggplot(death_data, aes(x = Temperature, y = Proportion_Deaths, col
   scale_color_manual(values = c("Proportion Deaths" = "red")) +
   theme_bw() + 
   labs(x = "Temperature (°C)", y = "Proportion of Deaths",
-       color = NULL, title = "Proportion of Deaths Across Thermal Gradient") + 
-  theme(strip.text = element_text(size = 10, face = "bold"),
+       color = NULL, title = "Proportion of Death Across Thermal Gradient") + 
+  theme(strip.text = element_text(size = 12, face = "bold"),
         legend.position = "bottom",
-        plot.title = element_text(hjust = 0.5, size = 14, face = "bold"))
+        plot.title = element_text(hjust = 0.5, size = 18, face = "bold"),
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        legend.text = element_text(size = 12))
 
 death_plot
+
+#ggsave("Figures/death_plot.pdf", plot = death_plot,
+#       device = "pdf", width = 7, height = 10)
 ```
 
 
 # Display all plots side by side: 
-```{r, fig.height=13, fig.width=20, warning = FALSE}
+```{r}
 p1 <- quad_param_plot
-p2 <- scenario_by_temp_plot
+p2_a <- scenario_by_temp_plot_variability
+p2_b <- scenario_by_temp_plot_individualsims
 p3 <- death_plot
 
 # setting widths
@@ -908,15 +1107,42 @@ widths <- c(0.75, 1.25, 0.75)
 total_width <- sum(widths)
 prop1 <- widths[1] / total_width
 prop2 <- (widths[1] + widths[2]) / total_width
+```
 
-grid.arrange(p1, p2, p3,
-             ncol = 3,
-             widths = widths, 
-             padding = unit(1.5, "cm"))
+#### Plot with all individual simulations
+```{r, warning=FALSE, fig.height=15, fig.width=25}
+all_plots_individual_sims <- gridExtra::grid.arrange(
+  p1, p2_b, p3,
+  ncol = 3,
+  widths = widths, 
+  padding = unit(1.5, "cm")
+)
 
 grid.lines(x = c(prop1, prop1), y = c(0, 1),
-           gp = gpar(col = "black", lwd = 1))
+           gp = gpar(col = "black", lwd = 2))
 grid.lines(x = c(prop2, prop2), y = c(0, 1),
-           gp = gpar(col = "black", lwd = 1))
+           gp = gpar(col = "black", lwd = 2))
+
+invisible(all_plots_individual_sims)
+
+#ggsave("Figures/all_plots_individual_sims.pdf", plot = all_plots_individual_sims, 
+#       device = "pdf", width = 25, height = 15)
+```
+
+#### Plot with variability
+```{r, warning=FALSE, fig.height=15, fig.width=25}
+all_plots_variability <- gridExtra::grid.arrange(p1, p2_a, p3,
+                                                 ncol = 3,
+                                                 widths = widths,
+                                                 padding = unit(1.5, "cm"))
+grid.lines(x = c(prop1, prop1), y = c(0, 1),
+           gp = gpar(col = "black", lwd = 2))
+grid.lines(x = c(prop2, prop2), y = c(0, 1),
+           gp = gpar(col = "black", lwd = 2))
+
+invisible(all_plots_variability)
+
+#ggsave("Figures/all_plots_variability.pdf", plot = all_plots_variability,
+#       device = "pdf", width = 25, height = 15)
 ```
 
