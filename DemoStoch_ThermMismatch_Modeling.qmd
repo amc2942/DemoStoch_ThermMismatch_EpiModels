@@ -1,17 +1,27 @@
 ---
 title: "Modeling Demographic Stochasticity and Thermal Mismatch in Host-Pathogen Wildlife Systems"
+subtitle: "Modeling Code"
 author: "Andy Carlino"
-output: pdf_document
+fig-align: center
+format:
+  pdf: 
+    documentclass: article
+    geometry: 
+        - top=1in
+        - left=0.75in
+        - bottom=1in
+        - right=0.75in
+    latex_engine: xelatex  
+fontsize: 10pt
+mainfont: "Times New Roman" 
+date: "`r Sys.Date()`"
+editor: source
 ---
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
 
 # Setup:
 
 Working Directory and Libraries:
-```{r}
+```{r, warning=FALSE}
 # Working Directory
 setwd("C:\\Users\\andre\\OneDrive\\Documents\\GitHub\\DemoStoch_ThermMismatch_EpiModels")
 
