@@ -72,7 +72,7 @@ estimate_phi <- function(temperature, q_phi, tmin_phi, tmax_phi) {
 }
 
 # Set q for phi
-q_phi <- 0.015
+q_phi <- 0.0145
 # Set temperature range
 tmin_phi <- 1
 tmax_phi <- 30
@@ -97,7 +97,7 @@ estimate_alpha <- function(temperature, q_alpha, tmin_alpha, tmax_alpha){
 }
 
 # Set q value for alpha 
-q_alpha <- 0.0085
+q_alpha <- 0.0091
 # Set temperature range
 tmin_alpha <- -5
 tmax_alpha <- 24
@@ -113,30 +113,7 @@ temp_peak_alpha <- (tmin_alpha + tmax_alpha) / 2
 peak_alpha <- estimate_alpha(temp_peak_alpha, q_alpha, tmin_alpha, tmax_alpha)
 ```
 
-Estimating the Range of Parameter Psi (Immune Growth Rate in Response to Virus)
-```{r}
-estimate_psi <- function(temperature, q_psi, tmin_psi, tmax_psi){
-  # Quadratic Equation
-  psi <- pmax(-q_psi * (temperature - tmin_psi) * (temperature - tmax_psi), 0)
-  return(psi)
-}
-
-# Set q value for psi 
-q_psi <- 0.0041
-# Set temperature range
-tmin_psi <- 1
-tmax_psi <- 28
-
-# Calculate corresponding values of alpha
-psi_values <- estimate_psi(temperatures, q_psi, tmin_psi, tmax_psi)
-
-# Min-Max normalization
-norm_psi <- (psi_values - min(psi_values)) / (max(psi_values) - min(psi_values))
-
-# Peak value of the alpha Parameter
-temp_peak_psi <- (tmin_psi + tmax_psi) / 2
-peak_psi <- estimate_psi(temp_peak_psi, q_psi, tmin_psi, tmax_psi)
-```
+Estimating the range of other parameters can be easily achieved by copying the code and replacing with appropriate variable names.
 
 Plot the functions: 
 ```{r}
@@ -165,15 +142,6 @@ alpha_plot <- ggplot(plot_data, aes(x = Temperature, y = Alpha)) +
   theme_bw() + 
   theme(axis.text = element_text(size = 15)) + 
   theme(axis.title = element_text(size = 15))
-
-# Plot Psi Values (Commented out, but code can easily be adopted to look at this parameter if needed...)
-#psi_plot <- ggplot(plot_data, aes(x = Temperature, y = Psi)) + 
-#  geom_line(color = "green") + 
-#  labs(x = "Temperature (C)", y = "Psi (Immune Response to Virus) Values") + 
-#  geom_vline(xintercept = temp_peak_psi, color = "green", linetype = "dashed") +
-#  theme_bw() + 
-#  theme(axis.text = element_text(size = 15)) + 
-#  theme(axis.title = element_text(size = 15))
 
 
 # To plot both parameters together with normalized values: 
@@ -766,7 +734,7 @@ scenario_by_temp_plot_variability <- ggplot(summary_results, aes(x = Day)) +
     labels = c("Viral Cell Load", "Immune Cell Load")
   ) + 
   scale_color_manual(
-    name = "Variable: ",
+    name = "Simulation: ",
     values = c("V_vec" = "red", "Z_vec" = "blue"),
     labels = c("Viral Cell Load", "Immune Cell Load")
   ) + 
@@ -777,11 +745,12 @@ scenario_by_temp_plot_variability <- ggplot(summary_results, aes(x = Day)) +
   theme(legend.position = "bottom", 
         legend.box = "horizontal",
         panel.grid = element_line(color = "gray90"),
-        plot.title = element_text(hjust = 0.5, size = 18, face = "bold"),
-        axis.title = element_text(size = 16),
-        axis.text = element_text(size = 12),
-        strip.text = element_text(size = 12, face = "bold"),
-        legend.text = element_text(size = 12))
+        plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),
+        axis.title = element_text(size = 17),
+        axis.text = element_text(size = 15),
+        strip.text = element_text(size = 15),
+        legend.text = element_text(size = 15),
+        legend.title = element_text(size = 15))
 
 scenario_by_temp_plot_variability
 
@@ -811,22 +780,23 @@ scenario_by_temp_plot_individualsims <- ggplot(individual_simulations, aes(x = D
                                  Scenario = function(x) paste0(x, " Mismatch"))) + 
   # Aesthetics:
   scale_color_manual(
-    name = "Variable: ",
+    name = "Simulation: ",
     values = c("V_vec" = "red", "Z_vec" = "blue"),
     labels = c("Viral Cell Load", "Immune Cell Load")
   ) + 
-  labs(title = "Results by Mismatch Scenario and Temperature (All Sims)",
+  labs(title = "A. Results by Mismatch Scenario and Temperature (100 Simulations)",
        x = "Days", 
        y = "Within-Host Cell Density/Load") + 
   theme_bw() + 
   theme(legend.position = "bottom", 
         legend.box = "horizontal",
         panel.grid = element_line(color = "gray90"),
-        plot.title = element_text(hjust = 0.5, size = 18, face = "bold"),
-        axis.title = element_text(size = 16),
-        axis.text = element_text(size = 12),
-        strip.text = element_text(size = 12, face = "bold"),
-        legend.text = element_text(size = 12))
+        plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),
+        axis.title = element_text(size = 17),
+        axis.text = element_text(size = 15),
+        strip.text = element_text(size = 15),
+        legend.text = element_text(size = 15),
+        legend.title = element_text(size = 15))
 
 scenario_by_temp_plot_individualsims
 
@@ -1069,7 +1039,7 @@ for(temp_idx in seq_along(temperatures)) {
 ```
 
 #### Plot the proportion of death at each scenario
-```{r, fig.height=10, fig.width=7}
+```{r, fig.height=10, fig.width=8}
 # Combine results to one data.frame
 death_data <- data.frame(
   Temperature = rep(temperatures, times = 5),
@@ -1090,13 +1060,13 @@ death_plot <- ggplot(death_data, aes(x = Temperature, y = Proportion_Deaths, col
   scale_color_manual(values = c("Proportion Deaths" = "red")) +
   theme_bw() + 
   labs(x = "Temperature (°C)", y = "Proportion of Deaths",
-       color = NULL, title = "Proportion of Death Across Thermal Gradient") + 
-  theme(strip.text = element_text(size = 12, face = "bold"),
+       color = NULL, title = "B. Proportion of Death Across Thermal Gradient") + 
+  theme(strip.text = element_text(size = 15),
         legend.position = "bottom",
-        plot.title = element_text(hjust = 0.5, size = 18, face = "bold"),
-        axis.title = element_text(size = 16),
-        axis.text = element_text(size = 12),
-        legend.text = element_text(size = 12))
+        plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),
+        axis.title = element_text(size = 17),
+        axis.text = element_text(size = 15),
+        legend.text = element_text(size = 15))
 
 death_plot
 
@@ -1154,5 +1124,22 @@ invisible(all_plots_variability)
 
 #ggsave("Figures/all_plots_variability.pdf", plot = all_plots_variability,
 #       device = "pdf", width = 25, height = 15)
+```
+
+#### Plot with Mismatch scenarios and Death plot
+```{r, warning=FALSE, fig.height=20, fig.width = 20}
+widths_2 <- c(1.25, 0.75)
+total_width_2 <- sum(widths_2)
+prop1_2 <- widths_2[1] / total_width_2
+
+outcome_propdeath_plot <- gridExtra::grid.arrange(p2_b, p3,
+                                                 ncol = 2,
+                                                 widths = widths_2,
+                                                 padding = unit(1.5, "cm"))
+grid.lines(x = c(prop1_2, prop1_2), y = c(0, 1),
+           gp = gpar(col = "black", lwd = 2))
+
+#ggsave("Figures/outcome_propdeath_plot.pdf", plot = outcome_propdeath_plot,
+#       device = "pdf", width = 20, height = 20)
 ```
 
