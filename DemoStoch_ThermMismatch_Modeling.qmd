@@ -34,6 +34,7 @@ library(reshape2)
 library(grid)
 library(gridExtra)
 library(dplyr)
+library(viridis)
 ```
 
 Source Functions:
@@ -692,7 +693,7 @@ all_combined_results <- rbind(
   combine_results(results_mid1, "Mid1"),
   combine_results(results_mid2, "Mid2"),
   combine_results(results_mid3, "Mid3"),
-  combine_results(results_null, "Null")
+  combine_results(results_null, "No")
 )
 
 # Summary stats for Confidence intervals and medians for plotting
@@ -1051,16 +1052,16 @@ death_data <- data.frame(
   Scenario = rep(c("High Mismatch", "Mid 1 Mismatch", "Mid 2 Mismatch", "Mid 3 Mismatch", "No Mismatch"), each = length(temperatures))
 )
 
-death_data$Legend_Label <- "Proportion Deaths"
+death_data$Legend_Label <- "Proportion of Deaths"
 
 # Create the plot
 death_plot <- ggplot(death_data, aes(x = Temperature, y = Proportion_Deaths, color = Legend_Label)) + 
   geom_line(linewidth = 1) +
   facet_wrap(~ Scenario, ncol = 1) + 
-  scale_color_manual(values = c("Proportion Deaths" = "red")) +
+  scale_color_manual(values = c("Proportion of Deaths" = "red")) +
   theme_bw() + 
   labs(x = "Temperature (°C)", y = "Proportion of Deaths",
-       color = NULL, title = "B. Proportion of Death Across Thermal Gradient") + 
+       color = NULL, title = "B. Deaths Across Thermal Gradient") + 
   theme(strip.text = element_text(size = 15),
         legend.position = "bottom",
         plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),
@@ -1127,7 +1128,7 @@ invisible(all_plots_variability)
 ```
 
 #### Plot with Mismatch scenarios and Death plot
-```{r, warning=FALSE, fig.height=20, fig.width = 20}
+```{r, warning=FALSE, fig.height=13, fig.width = 16}
 widths_2 <- c(1.25, 0.75)
 total_width_2 <- sum(widths_2)
 prop1_2 <- widths_2[1] / total_width_2
@@ -1139,7 +1140,82 @@ outcome_propdeath_plot <- gridExtra::grid.arrange(p2_b, p3,
 grid.lines(x = c(prop1_2, prop1_2), y = c(0, 1),
            gp = gpar(col = "black", lwd = 2))
 
-#ggsave("Figures/outcome_propdeath_plot.pdf", plot = outcome_propdeath_plot,
-#       device = "pdf", width = 20, height = 20)
+ggsave("Figures/outcome_propdeath_plot.pdf", plot = outcome_propdeath_plot,
+       device = "pdf", width = 16, height = 13)
 ```
+
+
+# Plot for Heatmap of Model Outcomes with different values of Phi and Alpha
+
+This chunk takes a while to run, 25 x 25 parameter combinations with 100 simulations each....
+```{r, warning = FALSE}
+# Define synthetic range for phi and alpha\
+phi_vals_hm <- seq(2.05, 2.35, length.out = 25)
+alpha_vals_hm <- seq(1.85, 2.05, length.out = 25)
+
+# Dataframe for grid results
+death_prop_grid <- expand.grid(phi = phi_vals_hm, alpha = alpha_vals_hm)
+death_prop_grid$Proportion_Deaths <- NA
+
+# Model run looping through all param combinations
+for (i in seq_len(nrow(death_prop_grid))) {
+  phi <- death_prop_grid$phi[i]
+  alpha <- death_prop_grid$alpha[i]
+  
+  #Set all params
+  params <- list(
+    phi = phi,
+    alpha = alpha, 
+    delta = 1.29,
+    psi = 0.91,
+    gamma = 0.13,
+    N_z = 1.29 * 0.35, 
+    z_scalar = z_scalar
+  )
+  
+  death_count_hm <- 0
+  for(sim in 1:num_sims){
+    hm_sim_results <- model_simulation(
+      V_vec = V_vec,
+      Z_vec = Z_vec, 
+      params = params, 
+      death_threshold = death_threshold,
+      clearance_threshold = clearance_threshold
+    )
+    
+    if(max(hm_sim_results$V_vec, na.rm = TRUE) >= death_threshold){
+      death_count_hm <- death_count_hm + 1
+    }
+  }
+  
+  death_prop_grid$Proportion_Deaths[i] <- death_count_hm / num_sims
+}
+```
+
+#### Plot (Heatmap with geom_tile)
+```{r, warning=FALSE, fig.height=8, fig.width=8}
+phi_alpha_range_plot <- ggplot(death_prop_grid, 
+                               aes(x = phi, y = alpha, fill = Proportion_Deaths)) +
+  geom_tile() + 
+  scale_fill_viridis_c(option = "viridis", limits = c(0,1), direction = -1) + 
+  theme_bw() + 
+  labs(title = "Outcomes across a Range of Parameter Values",
+       x = "Phi Parameter Range",
+       y = "Alpha Parameter Range", 
+       fill = "Proportion Deaths") + 
+  theme(plot.title = element_text(size = 16, hjust = 0.5, face = "bold"),
+        axis.title = element_text(size = 14),
+        axis.text = element_text(size = 12),
+        legend.position = "right", 
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 14))
+
+phi_alpha_range_plot
+
+#ggsave("Figures/phi_alpha_range_plot.pdf", plot = phi_alpha_range_plot,
+#       device = "pdf", width = 8, height = 8)
+```
+
+
+
 
