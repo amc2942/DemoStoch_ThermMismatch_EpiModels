@@ -813,7 +813,7 @@ These code blocks will track the proportion of death at each temperature along t
 #### High Mismatch: 
 ```{r, warning=FALSE}
 # Data frame to store both metrics for high mismatch
-pd_cd_results_high <- data.frame(Temperature = temperatures, Proportion_Deaths = NA, Coef_Variation = NA)
+pd_cd_results_high <- data.frame(Temperature = temperatures, Proportion_Deaths = NA, Entropy = NA)
 
 # Loop through each temperature
 for (temp_idx in seq_along(temperatures)) {
@@ -846,37 +846,42 @@ for (temp_idx in seq_along(temperatures)) {
       death_threshold = death_threshold,
       clearance_threshold = clearance_threshold
     )
-    
-    # Check for death
+      
+  # Check for death *FIRST*
     if (max(sim_results$V_vec, na.rm = TRUE) >= death_threshold) {
       death_count <- death_count + 1
+      clearance_days[sim] <- NA  # Mark as NA if death occurs *before* clearance
+    } else { #if death does not occur, then proceed to check for clearance
+      # Check for pathogen clearance (exact comparison)
+      clearance_day <- which(sim_results$V_vec == 0)[1]
+      clearance_days[sim] <- ifelse(length(clearance_day) > 0, clearance_day, NA)
     }
-    
-    # Check for pathogen clearance (first day V_vec reaches 0)
-    clearance_day <- which(sim_results$V_vec == 0)[1]  # First day it happens
-    clearance_days[sim] <- ifelse(is.na(clearance_day), NA, clearance_day)
   }
-  
   # Compute proportion of deaths
-  pd_cd_results_high$Proportion_Deaths[temp_idx] <- death_count / num_sims
+  proportion_deaths <- death_count / num_sims
+  pd_cd_results_high$Proportion_Deaths[temp_idx] <- proportion_deaths
+
+  # Calculate Entropy
+  clearance_count <- sum(!is.na(clearance_days)) # Count clearance events
+  death_proportion <- death_count / num_sims
+  clearance_proportion <- clearance_count/num_sims # proportion of clearance events
+
+  if (clearance_proportion == 0 || death_proportion == 0) {
+    entropy <- 0 # Entropy is 0 if all outcomes are the same (all death or all clearance)
+  } else {
+    entropy <- - (death_proportion * log2(death_proportion) + (1-death_proportion) * log2(1-death_proportion)) #  entropy calculation
+  }
+  pd_cd_results_high$Entropy[temp_idx] <- entropy
   
-  # Compute coefficient of variation for clearance
-  mean_clearance <- mean(clearance_days, na.rm = TRUE)
-  sd_clearance <- sd(clearance_days, na.rm = TRUE)
-  
-  pd_cd_results_high$Coef_Variation[temp_idx] <- ifelse(
-    sum(!is.na(clearance_days)) == 0,  # If no clearance events occurred
-    0,  # Return 0 instead of NA
-    sd_clearance / mean_clearance
-  )
 }
+
 ```
 
 
 #### Mid 1 Mismatch: 
 ```{r, warning=FALSE}
 # Data frame to store both metrics for mid1 mismatch
-pd_cd_results_mid1 <- data.frame(Temperature = temperatures, Proportion_Deaths = NA, Coef_Variation = NA)
+pd_cd_results_mid1 <- data.frame(Temperature = temperatures, Proportion_Deaths = NA, Entropy = NA)
 
 # Loop through each temperature
 for (temp_idx in seq_along(temperatures)) {
@@ -909,36 +914,41 @@ for (temp_idx in seq_along(temperatures)) {
       death_threshold = death_threshold,
       clearance_threshold = clearance_threshold
     )
-    
-    # Check for death
+      
+  # Check for death *FIRST*
     if (max(sim_results$V_vec, na.rm = TRUE) >= death_threshold) {
       death_count <- death_count + 1
+      clearance_days[sim] <- NA  # Mark as NA if death occurs *before* clearance
+    } else { #if death does not occur, then proceed to check for clearance
+      # Check for pathogen clearance (exact comparison)
+      clearance_day <- which(sim_results$V_vec == 0)[1]
+      clearance_days[sim] <- ifelse(length(clearance_day) > 0, clearance_day, NA)
     }
-    
-    # Check for pathogen clearance (first day V_vec reaches 0)
-    clearance_day <- which(sim_results$V_vec == 0)[1]  # First day it happens
-    clearance_days[sim] <- ifelse(is.na(clearance_day), NA, clearance_day)
   }
-  
   # Compute proportion of deaths
-  pd_cd_results_mid1$Proportion_Deaths[temp_idx] <- death_count / num_sims
+  proportion_deaths <- death_count / num_sims
+  pd_cd_results_mid1$Proportion_Deaths[temp_idx] <- proportion_deaths
+
+  # Calculate Entropy
+  clearance_count <- sum(!is.na(clearance_days)) # Count clearance events
+  death_proportion <- death_count / num_sims
+  clearance_proportion <- clearance_count/num_sims # proportion of clearance events
+
+  if (clearance_proportion == 0 || death_proportion == 0) {
+    entropy <- 0 # Entropy is 0 if all outcomes are the same (all death or all clearance)
+  } else {
+    entropy <- - (death_proportion * log2(death_proportion) + (1-death_proportion) * log2(1-death_proportion)) #  entropy calculation
+
+  }
+  pd_cd_results_mid1$Entropy[temp_idx] <- entropy
   
-  # Compute coefficient of variation for clearance
-  mean_clearance <- mean(clearance_days, na.rm = TRUE)
-  sd_clearance <- sd(clearance_days, na.rm = TRUE)
-  
-  pd_cd_results_mid1$Coef_Variation[temp_idx] <- ifelse(
-    sum(!is.na(clearance_days)) == 0,  # If no clearance events occurred
-    0,  # Return 0 
-    sd_clearance / mean_clearance
-  )
 }
 ```
 
 #### Mid 2 Mismatch: 
 ```{r, warning=FALSE}
 # Data frame to store both metrics for mid2 mismatch
-pd_cd_results_mid2 <- data.frame(Temperature = temperatures, Proportion_Deaths = NA, Coef_Variation = NA)
+pd_cd_results_mid2 <- data.frame(Temperature = temperatures, Proportion_Deaths = NA, Entropy = NA)
 
 # Loop through each temperature
 for (temp_idx in seq_along(temperatures)) {
@@ -971,36 +981,41 @@ for (temp_idx in seq_along(temperatures)) {
       death_threshold = death_threshold,
       clearance_threshold = clearance_threshold
     )
-    
-    # Check for death
+      
+  # Check for death *FIRST*
     if (max(sim_results$V_vec, na.rm = TRUE) >= death_threshold) {
       death_count <- death_count + 1
+      clearance_days[sim] <- NA  # Mark as NA if death occurs *before* clearance
+    } else { #if death does not occur, then proceed to check for clearance
+      # Check for pathogen clearance (exact comparison)
+      clearance_day <- which(sim_results$V_vec == 0)[1]
+      clearance_days[sim] <- ifelse(length(clearance_day) > 0, clearance_day, NA)
     }
-    
-    # Check for pathogen clearance (first day V_vec reaches 0)
-    clearance_day <- which(sim_results$V_vec == 0)[1]  # First day it happens
-    clearance_days[sim] <- ifelse(is.na(clearance_day), NA, clearance_day)
   }
-  
   # Compute proportion of deaths
-  pd_cd_results_mid2$Proportion_Deaths[temp_idx] <- death_count / num_sims
+  proportion_deaths <- death_count / num_sims
+  pd_cd_results_mid2$Proportion_Deaths[temp_idx] <- proportion_deaths
+
+  # Calculate Entropy
+  clearance_count <- sum(!is.na(clearance_days)) # Count clearance events
+  death_proportion <- death_count / num_sims
+  clearance_proportion <- clearance_count/num_sims # proportion of clearance events
+
+  if (clearance_proportion == 0 || death_proportion == 0) {
+    entropy <- 0 # Entropy is 0 if all outcomes are the same (all death or all clearance)
+  } else {
+    entropy <- - (death_proportion * log2(death_proportion) + (1-death_proportion) * log2(1-death_proportion)) #  entropy calculation
+
+  }
+  pd_cd_results_mid2$Entropy[temp_idx] <- entropy
   
-  # Compute coefficient of variation for clearance
-  mean_clearance <- mean(clearance_days, na.rm = TRUE)
-  sd_clearance <- sd(clearance_days, na.rm = TRUE)
-  
-  pd_cd_results_mid2$Coef_Variation[temp_idx] <- ifelse(
-    sum(!is.na(clearance_days)) == 0,  # If no clearance events occurred
-    0,  # Return 0 
-    sd_clearance / mean_clearance
-  )
 }
 ```
 
 #### Mid 3 Mismatch: 
 ```{r, warning=FALSE}
 # Data frame to store both metrics for mid3 mismatch
-pd_cd_results_mid3 <- data.frame(Temperature = temperatures, Proportion_Deaths = NA, Coef_Variation = NA)
+pd_cd_results_mid3 <- data.frame(Temperature = temperatures, Proportion_Deaths = NA, Entropy = NA)
 
 # Loop through each temperature
 for (temp_idx in seq_along(temperatures)) {
@@ -1033,36 +1048,41 @@ for (temp_idx in seq_along(temperatures)) {
       death_threshold = death_threshold,
       clearance_threshold = clearance_threshold
     )
-    
-    # Check for death
+      
+  # Check for death *FIRST*
     if (max(sim_results$V_vec, na.rm = TRUE) >= death_threshold) {
       death_count <- death_count + 1
+      clearance_days[sim] <- NA  # Mark as NA if death occurs *before* clearance
+    } else { #if death does not occur, then proceed to check for clearance
+      # Check for pathogen clearance (exact comparison)
+      clearance_day <- which(sim_results$V_vec == 0)[1]
+      clearance_days[sim] <- ifelse(length(clearance_day) > 0, clearance_day, NA)
     }
-    
-    # Check for pathogen clearance (first day V_vec reaches 0)
-    clearance_day <- which(sim_results$V_vec == 0)[1]  # First day it happens
-    clearance_days[sim] <- ifelse(is.na(clearance_day), NA, clearance_day)
   }
-  
   # Compute proportion of deaths
-  pd_cd_results_mid3$Proportion_Deaths[temp_idx] <- death_count / num_sims
+  proportion_deaths <- death_count / num_sims
+  pd_cd_results_mid3$Proportion_Deaths[temp_idx] <- proportion_deaths
+
+  # Calculate Entropy
+  clearance_count <- sum(!is.na(clearance_days)) # Count clearance events
+  death_proportion <- death_count / num_sims
+  clearance_proportion <- clearance_count/num_sims # proportion of clearance events
+
+  if (clearance_proportion == 0 || death_proportion == 0) {
+    entropy <- 0 # Entropy is 0 if all outcomes are the same (all death or all clearance)
+  } else {
+    entropy <- - (death_proportion * log2(death_proportion) + (1-death_proportion) * log2(1-death_proportion)) #  entropy calculation
+
+  }
+  pd_cd_results_mid3$Entropy[temp_idx] <- entropy
   
-  # Compute coefficient of variation for clearance
-  mean_clearance <- mean(clearance_days, na.rm = TRUE)
-  sd_clearance <- sd(clearance_days, na.rm = TRUE)
-  
-  pd_cd_results_mid3$Coef_Variation[temp_idx] <- ifelse(
-    sum(!is.na(clearance_days)) == 0,  # If no clearance events occurred
-    0,  # Return 0 
-    sd_clearance / mean_clearance
-  )
 }
 ```
 
 #### Null Mismatch: 
 ```{r, warning=FALSE}
-# Data frame to store both metrics for no mismatch
-pd_cd_results_null <- data.frame(Temperature = temperatures, Proportion_Deaths = NA, Coef_Variation = NA)
+# Data frame to store both metrics for mid1 mismatch
+pd_cd_results_null <- data.frame(Temperature = temperatures, Proportion_Deaths = NA, Entropy = NA)
 
 # Loop through each temperature
 for (temp_idx in seq_along(temperatures)) {
@@ -1095,34 +1115,39 @@ for (temp_idx in seq_along(temperatures)) {
       death_threshold = death_threshold,
       clearance_threshold = clearance_threshold
     )
-    
-    # Check for death
+      
+  # Check for death *FIRST*
     if (max(sim_results$V_vec, na.rm = TRUE) >= death_threshold) {
       death_count <- death_count + 1
+      clearance_days[sim] <- NA  # Mark as NA if death occurs *before* clearance
+    } else { #if death does not occur, then proceed to check for clearance
+      # Check for pathogen clearance (exact comparison)
+      clearance_day <- which(sim_results$V_vec == 0)[1]
+      clearance_days[sim] <- ifelse(length(clearance_day) > 0, clearance_day, NA)
     }
-    
-    # Check for pathogen clearance (first day V_vec reaches 0)
-    clearance_day <- which(sim_results$V_vec == 0)[1]  # First day it happens
-    clearance_days[sim] <- ifelse(is.na(clearance_day), NA, clearance_day)
   }
-  
   # Compute proportion of deaths
-  pd_cd_results_null$Proportion_Deaths[temp_idx] <- death_count / num_sims
+  proportion_deaths <- death_count / num_sims
+  pd_cd_results_null$Proportion_Deaths[temp_idx] <- proportion_deaths
+
+  # Calculate Entropy
+  clearance_count <- sum(!is.na(clearance_days)) # Count clearance events
+  death_proportion <- death_count / num_sims
+  clearance_proportion <- clearance_count/num_sims # proportion of clearance events
+
+  if (clearance_proportion == 0 || death_proportion == 0) {
+    entropy <- 0 # Entropy is 0 if all outcomes are the same (all death or all clearance)
+  } else {
+    entropy <- - (death_proportion * log2(death_proportion) + (1-death_proportion) * log2(1-death_proportion)) #  entropy calculation
+
+  }
+  pd_cd_results_null$Entropy[temp_idx] <- entropy
   
-  # Compute coefficient of variation for clearance
-  mean_clearance <- mean(clearance_days, na.rm = TRUE)
-  sd_clearance <- sd(clearance_days, na.rm = TRUE)
-  
-  pd_cd_results_null$Coef_Variation[temp_idx] <- ifelse(
-    sum(!is.na(clearance_days)) == 0,  # If no clearance events occurred
-    0,  # Return 0 
-    sd_clearance / mean_clearance
-  )
 }
 ```
 
 #### Plot the proportion of death at each scenario
-```{r, fig.height=10, fig.width=8}
+```{r, fig.height=10, fig.width=6}
 # Combine results to one data.frame
 death_data <- data.frame(
   Temperature = rep(temperatures, times = 5),
@@ -1159,28 +1184,28 @@ death_plot
 
 
 # Plot the coefficient of variation for each thermal mismatch scenario
-```{r, fig.height=20, fig.width = 12}
+```{r, fig.height=12, fig.width = 8}
 # data frame for all results and easier ggplotting
-cv_data <- data.frame(
+ent_data <- data.frame(
   Temperature = rep(temperatures, times = 5),
-  Coef_Variation = c(pd_cd_results_high$Coef_Variation,
-                     pd_cd_results_mid1$Coef_Variation,
-                     pd_cd_results_mid2$Coef_Variation,
-                     pd_cd_results_mid3$Coef_Variation,
-                     pd_cd_results_null$Coef_Variation),
+  Entropy = c(pd_cd_results_high$Entropy,
+                     pd_cd_results_mid1$Entropy,
+                     pd_cd_results_mid2$Entropy,
+                     pd_cd_results_mid3$Entropy,
+                     pd_cd_results_null$Entropy),
   Scenario = rep(c("High Mismatch", "Mid 1 Mismatch", "Mid 2 Mismatch", "Mid 3 Mismatch", "No Mismatch"), each = length(temperatures))
 )
 
-cv_data$Legend_Label <- "Coefficient of Variation"
+ent_data$Legend_Label <- "Variability in Outcomes"
 
 # create the facetwrapped plot: 
-cv_plot <- ggplot(cv_data, aes(x = Temperature, y = Coef_Variation, color = Legend_Label)) +
+cv_plot <- ggplot(ent_data, aes(x = Temperature, y = Entropy, color = Legend_Label)) +
   geom_line(linewidth = 1) + 
   facet_wrap(~ Scenario, ncol = 1) + 
-  scale_color_manual(values = c("Coefficient of Variation" = "blue")) + 
+  scale_color_manual(values = c("Variability in Outcomes" = "blue")) + 
     theme_bw() + 
-  labs(x = "Temperature (°C)", y = "Coefficient of Variation",
-       color = NULL, title = "C. Variability in Pathogen Clearance Across Thermal Gradient") + 
+  labs(x = "Temperature (°C)", y = "Shannon Entropy",
+       color = NULL, title = "C. Variability in Outcomes") + 
   theme(strip.text = element_text(size = 15),
         legend.position = "bottom",
         plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),
