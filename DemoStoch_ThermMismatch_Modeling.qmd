@@ -378,11 +378,11 @@ quad_param_plot <- ggplot(quad_param_plot_data,
   geom_vline(aes(xintercept = Temp_Peak_Alpha_opt), linetype = "dashed", col = "blue", linewidth = 0.8) +
   theme_bw() + 
   labs(x = "Temperature (°C)", y = "Parameter Values (Normalized)", 
-       color = "Parameter:", title = "Thermal Mismatch Scenarios") +
-  theme(strip.text = element_text(size = 12, face = "bold"), 
+       color = "Parameter:", title = "A. Thermal Mismatch Scenarios") +
+  theme(strip.text = element_text(size = 13), 
         legend.position = "bottom",
-        plot.title = element_text(hjust = 0.5, size = 18, face = "bold"),
-        axis.title = element_text(size = 16),
+        plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+        axis.title = element_text(size = 14),
         axis.text = element_text(size = 12),
         legend.text = element_text(size = 12))
 
@@ -675,7 +675,7 @@ for (temp in temp_checks) {
 }
 ```
 
-#### Create plot with all results (4 Scenarios, 3 Temps each)
+#### Create plot with all results (5 Scenarios, 3 Temps each)
 ```{r}
 # Function to combine the results
 combine_results <- function(results_list, scenario_name){
@@ -785,19 +785,19 @@ scenario_by_temp_plot_individualsims <- ggplot(individual_simulations, aes(x = D
     values = c("V_vec" = "red", "Z_vec" = "blue"),
     labels = c("Viral Cell Load", "Immune Cell Load")
   ) + 
-  labs(title = "A. Results by Mismatch Scenario and Temperature (100 Simulations)",
+  labs(title = "B. Results by Mismatch Scenario and Temp. (100 Simulations)",
        x = "Days", 
        y = "Within-Host Cell Density/Load") + 
   theme_bw() + 
   theme(legend.position = "bottom", 
         legend.box = "horizontal",
         panel.grid = element_line(color = "gray90"),
-        plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),
-        axis.title = element_text(size = 17),
-        axis.text = element_text(size = 15),
-        strip.text = element_text(size = 15),
-        legend.text = element_text(size = 15),
-        legend.title = element_text(size = 15))
+        plot.title = element_text(hjust = 0.5, size = 18, face = "bold"),
+        axis.title = element_text(size = 15),
+        axis.text = element_text(size = 13),
+        strip.text = element_text(size = 13),
+        legend.text = element_text(size = 13),
+        legend.title = element_text(size = 13))
 
 scenario_by_temp_plot_individualsims
 
@@ -1168,13 +1168,13 @@ death_plot <- ggplot(death_data, aes(x = Temperature, y = Proportion_Deaths, col
   scale_color_manual(values = c("Proportion of Deaths" = "red")) +
   theme_bw() + 
   labs(x = "Temperature (°C)", y = "Proportion of Deaths",
-       color = NULL, title = "B. Deaths Across Thermal Gradient") + 
+       color = NULL, title = "C. Deaths Across Thermal Gradient") + 
   theme(strip.text = element_text(size = 15),
         legend.position = "bottom",
-        plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),
-        axis.title = element_text(size = 17),
-        axis.text = element_text(size = 15),
-        legend.text = element_text(size = 15))
+        plot.title = element_text(hjust = 0.5, size = 18, face = "bold"),
+        axis.title = element_text(size = 15),
+        axis.text = element_text(size = 13),
+        legend.text = element_text(size = 13))
 
 death_plot
 
@@ -1183,8 +1183,8 @@ death_plot
 ```
 
 
-# Plot the coefficient of variation for each thermal mismatch scenario
-```{r, fig.height=12, fig.width = 8}
+# Plot the ENTROPY? / COEF OF VARIATION for each thermal mismatch scenario
+```{r, fig.height=10, fig.width = 6}
 # data frame for all results and easier ggplotting
 ent_data <- data.frame(
   Temperature = rep(temperatures, times = 5),
@@ -1199,21 +1199,21 @@ ent_data <- data.frame(
 ent_data$Legend_Label <- "Variability in Outcomes"
 
 # create the facetwrapped plot: 
-cv_plot <- ggplot(ent_data, aes(x = Temperature, y = Entropy, color = Legend_Label)) +
+ent_plot <- ggplot(ent_data, aes(x = Temperature, y = Entropy, color = Legend_Label)) +
   geom_line(linewidth = 1) + 
   facet_wrap(~ Scenario, ncol = 1) + 
   scale_color_manual(values = c("Variability in Outcomes" = "blue")) + 
     theme_bw() + 
   labs(x = "Temperature (°C)", y = "Shannon Entropy",
-       color = NULL, title = "C. Variability in Outcomes") + 
+       color = NULL, title = "D. Outcome Variability") + 
   theme(strip.text = element_text(size = 15),
         legend.position = "bottom",
-        plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),
-        axis.title = element_text(size = 17),
-        axis.text = element_text(size = 15),
-        legend.text = element_text(size = 15))
+        plot.title = element_text(hjust = 0.5, size = 18, face = "bold"),
+        axis.title = element_text(size = 15),
+        axis.text = element_text(size = 13),
+        legend.text = element_text(size = 13))
 
-cv_plot
+ent_plot
   
 ```
 
@@ -1224,19 +1224,21 @@ p1 <- quad_param_plot
 p2_a <- scenario_by_temp_plot_variability
 p2_b <- scenario_by_temp_plot_individualsims
 p3 <- death_plot
+p4 <- ent_plot
 
 # setting widths
-widths <- c(0.75, 1.25, 0.75)
+widths <- c(0.75, 1.5, 0.75, 0.75)
 total_width <- sum(widths)
 prop1 <- widths[1] / total_width
 prop2 <- (widths[1] + widths[2]) / total_width
+prop3 <- (widths[1] + widths[2] + widths[3]) / total_width
 ```
 
 #### Plot with all individual simulations
 ```{r, warning=FALSE, fig.height=15, fig.width=25}
 all_plots_individual_sims <- gridExtra::grid.arrange(
-  p1, p2_b, p3,
-  ncol = 3,
+  p1, p2_b, p3, p4,
+  ncol = 4,
   widths = widths, 
   padding = unit(1.5, "cm")
 )
@@ -1245,10 +1247,11 @@ grid.lines(x = c(prop1, prop1), y = c(0, 1),
            gp = gpar(col = "black", lwd = 2))
 grid.lines(x = c(prop2, prop2), y = c(0, 1),
            gp = gpar(col = "black", lwd = 2))
-
+grid.lines(x = c(prop3, prop3), y = c(0, 1),
+           gp = gpar(col = "black", lwd = 2))
 invisible(all_plots_individual_sims)
 
-#ggsave("Figures/all_plots_individual_sims.pdf", plot = all_plots_individual_sims, 
+#ggsave("Figures/FullFigure_se.pdf", plot = all_plots_individual_sims, 
 #       device = "pdf", width = 25, height = 15)
 ```
 
@@ -1282,8 +1285,8 @@ outcome_propdeath_plot <- gridExtra::grid.arrange(p2_b, p3,
 grid.lines(x = c(prop1_2, prop1_2), y = c(0, 1),
            gp = gpar(col = "black", lwd = 2))
 
-ggsave("Figures/outcome_propdeath_plot.pdf", plot = outcome_propdeath_plot,
-       device = "pdf", width = 16, height = 13)
+#ggsave("Figures/outcome_propdeath_plot.pdf", plot = outcome_propdeath_plot,
+#       device = "pdf", width = 16, height = 13)
 ```
 
 
@@ -1292,8 +1295,8 @@ ggsave("Figures/outcome_propdeath_plot.pdf", plot = outcome_propdeath_plot,
 This chunk takes a while to run, 25 x 25 parameter combinations with 100 simulations each....
 ```{r, warning = FALSE}
 # Define synthetic range for phi and alpha\
-phi_vals_hm <- seq(2.05, 2.35, length.out = 25)
-alpha_vals_hm <- seq(1.85, 2.05, length.out = 25)
+phi_vals_hm <- seq(2.05, 2.35, length.out = 10)
+alpha_vals_hm <- seq(1.85, 2.05, length.out = 10)
 
 # Dataframe for grid results
 death_prop_grid <- expand.grid(phi = phi_vals_hm, alpha = alpha_vals_hm)
@@ -1339,7 +1342,7 @@ for (i in seq_len(nrow(death_prop_grid))) {
 phi_alpha_range_plot <- ggplot(death_prop_grid, 
                                aes(x = phi, y = alpha, fill = Proportion_Deaths)) +
   geom_tile() + 
-  scale_fill_viridis_c(option = "mako", limits = c(0,1), direction = -1) + 
+  scale_fill_viridis_c(option = "viridis", limits = c(0,1), direction = -1) + 
   theme_bw() + 
   labs(title = "Outcomes across a Range of Parameter Values",
        x = "Phi Parameter Range",
@@ -1358,6 +1361,19 @@ phi_alpha_range_plot
 #       device = "pdf", width = 8, height = 8)
 ```
 
+#### Proportion of Death and Outcome variability
 
+```{r, fig.height=8, fig.width=12}
+widths_3 <- c(1, 1)
+total_width_3 <- sum(widths_3)
+prop1_3 <- widths_3[1] / total_width_3
+
+propdeath_variability_plot <- gridExtra::grid.arrange(p3, p4,
+                                                 ncol = 2,
+                                                 widths = widths_3,
+                                                 padding = unit(1.5, "cm"))
+grid.lines(x = c(prop1_3, prop1_3), y = c(0, 1),
+           gp = gpar(col = "black", lwd = 2))
+```
 
 
