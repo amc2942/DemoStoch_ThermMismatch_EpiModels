@@ -816,7 +816,8 @@ These code blocks will track the proportion of death at each temperature along t
 pd_cd_results_high <- data.frame(Temperature = temperatures, 
                                  Proportion_Deaths = NA, 
                                  Entropy = NA, 
-                                 Coef_Variation = NA)
+                                 Coef_Variation = NA,
+                                 Prop_Death_CoefVar = NA)
 
 # Loop through each temperature
 for (temp_idx in seq_along(temperatures)) {
@@ -887,7 +888,27 @@ for (temp_idx in seq_along(temperatures)) {
     pd_cd_results_high$Coef_Variation[temp_idx] <- cv
   } else {
     pd_cd_results_high$Coef_Variation[temp_idx] <- NA
+    
   }
+  
+  # Calculate Coef of Variation for Proportion of Deaths
+  if (proportion_deaths == 0) {
+    prop_death_cv <- 0
+  } else {
+    prop_deaths_vec <- rep(c(0, 1), times = c(num_sims - death_count, death_count))
+  
+    min_deaths <- 4  # minimum threshold
+  
+    if (death_count >= min_deaths) {  # Check for minimum threshold
+        sd_prop_deaths <- sd(prop_deaths_vec)
+        mean_prop_deaths <- mean(prop_deaths_vec)
+        prop_death_cv <- sd_prop_deaths / mean_prop_deaths
+    } else {
+        prop_death_cv <- NA # Not enough deaths for reliable calculation
+    }
+  }
+  
+  pd_cd_results_high$Prop_Death_CoefVar[temp_idx] <- prop_death_cv
 }
 
 ```
@@ -899,7 +920,8 @@ for (temp_idx in seq_along(temperatures)) {
 pd_cd_results_mid1 <- data.frame(Temperature = temperatures, 
                                  Proportion_Deaths = NA, 
                                  Entropy = NA, 
-                                 Coef_Variation = NA)
+                                 Coef_Variation = NA,
+                                 Prop_Death_CoefVar = NA)
 
 # Loop through each temperature
 for (temp_idx in seq_along(temperatures)) {
@@ -971,6 +993,25 @@ for (temp_idx in seq_along(temperatures)) {
   } else {
     pd_cd_results_mid1$Coef_Variation[temp_idx] <- NA
   }
+    
+  # Calculate Coef of Variation for Proportion of Deaths
+  if (proportion_deaths == 0) {
+    prop_death_cv <- 0
+  } else {
+    prop_deaths_vec <- rep(c(0, 1), times = c(num_sims - death_count, death_count))
+  
+    min_deaths <- 4  # minimum threshold
+  
+    if (death_count >= min_deaths) {  # Check for minimum threshold
+        sd_prop_deaths <- sd(prop_deaths_vec)
+        mean_prop_deaths <- mean(prop_deaths_vec)
+        prop_death_cv <- sd_prop_deaths / mean_prop_deaths
+    } else {
+        prop_death_cv <- NA # Not enough deaths for reliable calculation
+    }
+  }
+  
+  pd_cd_results_mid1$Prop_Death_CoefVar[temp_idx] <- prop_death_cv
 }
 
 ```
@@ -982,7 +1023,8 @@ for (temp_idx in seq_along(temperatures)) {
 pd_cd_results_mid2 <- data.frame(Temperature = temperatures, 
                                  Proportion_Deaths = NA, 
                                  Entropy = NA, 
-                                 Coef_Variation = NA)
+                                 Coef_Variation = NA,
+                                 Prop_Death_CoefVar = NA)
 
 # Loop through each temperature
 for (temp_idx in seq_along(temperatures)) {
@@ -1054,6 +1096,25 @@ for (temp_idx in seq_along(temperatures)) {
   } else {
     pd_cd_results_mid2$Coef_Variation[temp_idx] <- NA
   }
+  
+  # Calculate Coef of Variation for Proportion of Deaths
+  if (proportion_deaths == 0) {
+    prop_death_cv <- 0
+  } else {
+    prop_deaths_vec <- rep(c(0, 1), times = c(num_sims - death_count, death_count))
+  
+    min_deaths <- 4  # minimum threshold
+  
+    if (death_count >= min_deaths) {  # Check for minimum threshold
+        sd_prop_deaths <- sd(prop_deaths_vec)
+        mean_prop_deaths <- mean(prop_deaths_vec)
+        prop_death_cv <- sd_prop_deaths / mean_prop_deaths
+    } else {
+        prop_death_cv <- NA # Not enough deaths for reliable calculation
+    }
+  }
+  
+  pd_cd_results_mid2$Prop_Death_CoefVar[temp_idx] <- prop_death_cv
 }
 
 ```
@@ -1064,7 +1125,8 @@ for (temp_idx in seq_along(temperatures)) {
 pd_cd_results_mid3 <- data.frame(Temperature = temperatures, 
                                  Proportion_Deaths = NA, 
                                  Entropy = NA, 
-                                 Coef_Variation = NA)
+                                 Coef_Variation = NA,
+                                 Prop_Death_CoefVar = NA)
 
 # Loop through each temperature
 for (temp_idx in seq_along(temperatures)) {
@@ -1136,6 +1198,26 @@ for (temp_idx in seq_along(temperatures)) {
   } else {
     pd_cd_results_mid3$Coef_Variation[temp_idx] <- NA
   }
+  
+    
+  # Calculate Coef of Variation for Proportion of Deaths
+  if (proportion_deaths == 0) {
+    prop_death_cv <- 0
+  } else {
+    prop_deaths_vec <- rep(c(0, 1), times = c(num_sims - death_count, death_count))
+  
+    min_deaths <- 4  # minimum threshold
+  
+    if (death_count >= min_deaths) {  # Check for minimum threshold
+        sd_prop_deaths <- sd(prop_deaths_vec)
+        mean_prop_deaths <- mean(prop_deaths_vec)
+        prop_death_cv <- sd_prop_deaths / mean_prop_deaths
+    } else {
+        prop_death_cv <- NA # Not enough deaths for reliable calculation
+    }
+  }
+  
+  pd_cd_results_mid3$Prop_Death_CoefVar[temp_idx] <- prop_death_cv
 }
 
 ```
@@ -1146,7 +1228,8 @@ for (temp_idx in seq_along(temperatures)) {
 pd_cd_results_null <- data.frame(Temperature = temperatures, 
                                  Proportion_Deaths = NA, 
                                  Entropy = NA, 
-                                 Coef_Variation = NA)
+                                 Coef_Variation = NA,
+                                 Prop_Death_CoefVar = NA)
 
 # Loop through each temperature
 for (temp_idx in seq_along(temperatures)) {
@@ -1218,6 +1301,26 @@ for (temp_idx in seq_along(temperatures)) {
   } else {
     pd_cd_results_null$Coef_Variation[temp_idx] <- NA
   }
+  
+    
+  # Calculate Coef of Variation for Proportion of Deaths
+  if (proportion_deaths == 0) {
+    prop_death_cv <- 0
+  } else {
+    prop_deaths_vec <- rep(c(0, 1), times = c(num_sims - death_count, death_count))
+  
+    min_deaths <- 4  # minimum threshold
+  
+    if (death_count >= min_deaths) {  # Check for minimum threshold
+        sd_prop_deaths <- sd(prop_deaths_vec)
+        mean_prop_deaths <- mean(prop_deaths_vec)
+        prop_death_cv <- sd_prop_deaths / mean_prop_deaths
+    } else {
+        prop_death_cv <- NA # Not enough deaths for reliable calculation
+    }
+  }
+  
+  pd_cd_results_null$Prop_Death_CoefVar[temp_idx] <- prop_death_cv
 }
 
 ```
@@ -1281,7 +1384,7 @@ ent_plot <- ggplot(ent_data, aes(x = Temperature, y = Entropy, color = Legend_La
   scale_color_manual(values = c("Variability in Outcomes" = "blue")) + 
     theme_bw() + 
   labs(x = "Temperature (°C)", y = "Shannon Entropy",
-       color = NULL, title = "D. Outcome Variability") + 
+       color = NULL, title = "D. Outcome Variability (Entropy)") + 
   theme(strip.text = element_text(size = 15),
         legend.position = "bottom",
         plot.title = element_text(hjust = 0.5, size = 18, face = "bold"),
@@ -1325,7 +1428,9 @@ combined_plot <- ggplot(combined_data, aes(x = Temperature, y = Value, linetype 
 combined_plot
 ```
 
-#### Plot for coefficient of variation: 
+#### Plots for coefficient of variation:
+
+First, for the Coefficient of variation for the clearance days: 
 ```{r, fig.height=10, fig.width=6}
 # Data frame for CV results
 cv_data <- data.frame(
@@ -1358,6 +1463,44 @@ cv_plot <- ggplot(cv_data, aes(x = Temperature, y = Coef_Variation, color = Lege
 cv_plot
 ```
 
+Now for Coefficient of Variation for Proportion of deaths:
+```{r, fig.height=10, fig.width=6, warning=FALSE}
+# Data frame for CV results
+prop_death_cv_data <- data.frame(
+  Temperature = rep(temperatures, times = 5),
+  Prop_Death_CoefVar = c(pd_cd_results_high$Prop_Death_CoefVar,
+                     pd_cd_results_mid1$Prop_Death_CoefVar,
+                     pd_cd_results_mid2$Prop_Death_CoefVar,
+                     pd_cd_results_mid3$Prop_Death_CoefVar,
+                     pd_cd_results_null$Prop_Death_CoefVar),
+  Scenario = rep(c("High Mismatch", "Mid 1 Mismatch", "Mid 2 Mismatch", "Mid 3 Mismatch", "No Mismatch"), each = length(temperatures))
+)
+
+prop_death_cv_data$Legend_Label <- "Coefficient of Variation"
+
+# Create the facet-wrapped plot for CV
+prop_death_cv_plot <- ggplot(prop_death_cv_data, aes(x = Temperature, y = Prop_Death_CoefVar, color = Legend_Label)) +
+  geom_line(linewidth = 1) +
+  facet_wrap(~ Scenario, ncol = 1) +
+  scale_color_manual(values = c("Coefficient of Variation" = "red")) + 
+  theme_bw() +
+  labs(x = "Temperature (°C)", y = "Coefficient of Variation",
+       color = NULL, title = "Variability in Proportion of Deaths") + 
+  theme(strip.text = element_text(size = 15),
+        legend.position = "bottom",
+        plot.title = element_text(hjust = 0.5, size = 18, face = "bold"),
+        axis.title = element_text(size = 15),
+        axis.text = element_text(size = 13),
+        legend.text = element_text(size = 13))
+
+prop_death_cv_plot
+```
+
+#### Plot Variability in Prop Death next to Prop Death: 
+```{r, fig.height=10, fig.width=10, warning=FALSE}
+death_data_combine <- grid.arrange(death_plot, prop_death_cv_plot, ncol = 2)
+invisible(death_data_combine)
+```
 
 # Display all plots side by side: 
 ```{r}
