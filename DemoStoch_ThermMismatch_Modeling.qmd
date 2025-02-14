@@ -98,7 +98,7 @@ estimate_alpha <- function(temperature, q_alpha, tmin_alpha, tmax_alpha){
 }
 
 # Set q value for alpha 
-q_alpha <- 0.0091
+q_alpha <- 0.0097
 # Set temperature range
 tmin_alpha <- -5
 tmax_alpha <- 24
@@ -808,7 +808,11 @@ scenario_by_temp_plot_individualsims
 
 # Track the Proportion of deaths across thermal gradient and coefficient of variation in clearance days, entropy:
 
-These code blocks will track the proportion of death at each temperature along the sequence, as well as the coefficient of variation in days in which the host clears the pathogen (return NA if no clearance events). also trying Shannon entropy to quantify variability. 
+These code blocks will track the proportion of death at each temperature along the sequence, as well as the coefficient of variation in days in which the host clears the pathogen (return NA if no clearance events). also trying Shannon entropy to quantify variability. The entropy is defined as the probability-weighted average of the logarithmized probabilities for all possible values:
+
+$$
+ \textbf{Entropy} \Rightarrow H(X) = - \sum p(x) * log (p(x))
+$$
 
 #### High Mismatch: 
 ```{r, warning=FALSE}
@@ -860,21 +864,34 @@ for (temp_idx in seq_along(temperatures)) {
       clearance_days[sim] <- ifelse(length(clearance_day) > 0, clearance_day, NA)
     }
   }
+  
   # Compute proportion of deaths
   proportion_deaths <- death_count / num_sims
   pd_cd_results_high$Proportion_Deaths[temp_idx] <- proportion_deaths
 
-  # Calculate Entropy
+  # Calculate Entropy (multinomial distribution and using natural logs)
   clearance_count <- sum(!is.na(clearance_days)) # Count clearance events
-  death_proportion <- death_count / num_sims
-  clearance_proportion <- clearance_count/num_sims # proportion of clearance events
-
-  if (clearance_proportion == 0 || death_proportion == 0) {
-    entropy <- 0 # Entropy is 0 if all outcomes are the same (all death or all clearance)
-  } else {
-    entropy <- - (death_proportion * log2(death_proportion) + (1-death_proportion) * log2(1-death_proportion)) #  entropy calculation
-  }
+  death_proportion <- round((death_count / num_sims), 3) #proportion of death events
+  clearance_proportion <- round((clearance_count/num_sims), 3) # proportion of clearance events
+  persist_proportion <- round((1 - death_proportion - clearance_proportion), 3)
   
+  entropy <- 0  # Initialize
+  
+  # Calculate entropy 
+  if (persist_proportion == 0) {
+      # Handle the case where persist_proportion is 0
+      if (death_proportion == 0 || clearance_proportion == 0) {
+        entropy <- 0 # Entropy is 0 if all outcomes are the same (all death or all clearance)
+      } else {
+        entropy <- - (death_proportion * log(death_proportion) + (clearance_proportion * log(clearance_proportion)))
+      }
+  } else {
+      # General case (persist_proportion is not 0)
+      entropy <- - (death_proportion * log(death_proportion) + 
+                    clearance_proportion * log(clearance_proportion) +
+                    persist_proportion * log(persist_proportion))
+  }
+    
   pd_cd_results_high$Entropy[temp_idx] <- entropy
   
   # Calculate Coefficient of Variation (Only if enough clearances, setting min threshold)
@@ -897,17 +914,18 @@ for (temp_idx in seq_along(temperatures)) {
   } else {
     prop_deaths_vec <- rep(c(0, 1), times = c(num_sims - death_count, death_count))
   
-    min_deaths <- 4  # minimum threshold
+    min_deaths <- 3  # minimum threshold
   
-    if (death_count >= min_deaths) {  # Check for minimum threshold
-        sd_prop_deaths <- sd(prop_deaths_vec)
-        mean_prop_deaths <- mean(prop_deaths_vec)
-        prop_death_cv <- sd_prop_deaths / mean_prop_deaths
-    } else {
-        prop_death_cv <- NA # Not enough deaths for reliable calculation
-    }
+      if (death_count >= min_deaths) {
+          # Bernoulli variance calculation
+          variance_prop_deaths <- proportion_deaths * (1 - proportion_deaths) # Correct variance calculation
+          sd_prop_deaths <- sqrt(variance_prop_deaths) # Correct SD calculation
+          prop_death_cv <- sd_prop_deaths / proportion_deaths # Correct CV calculation
+      } else {
+          prop_death_cv <- NA
+      }
   }
-  
+
   pd_cd_results_high$Prop_Death_CoefVar[temp_idx] <- prop_death_cv
 }
 
@@ -968,15 +986,27 @@ for (temp_idx in seq_along(temperatures)) {
   proportion_deaths <- death_count / num_sims
   pd_cd_results_mid1$Proportion_Deaths[temp_idx] <- proportion_deaths
 
-  # Calculate Entropy
+  # Calculate Entropy (multinomial distribution and using natural logs)
   clearance_count <- sum(!is.na(clearance_days)) # Count clearance events
-  death_proportion <- death_count / num_sims
-  clearance_proportion <- clearance_count/num_sims # proportion of clearance events
-
-  if (clearance_proportion == 0 || death_proportion == 0) {
-    entropy <- 0 # Entropy is 0 if all outcomes are the same (all death or all clearance)
+  death_proportion <- round((death_count / num_sims), 3) #proportion of death events
+  clearance_proportion <- round((clearance_count/num_sims), 3) # proportion of clearance events
+  persist_proportion <- round((1 - death_proportion - clearance_proportion), 3)
+  
+  entropy <- 0  # Initialize
+  
+  # Calculate entropy 
+  if (persist_proportion == 0) {
+      # Handle the case where persist_proportion is 0
+      if (death_proportion == 0 || clearance_proportion == 0) {
+        entropy <- 0 # Entropy is 0 if all outcomes are the same (all death or all clearance)
+      } else {
+        entropy <- - (death_proportion * log(death_proportion) + (clearance_proportion * log(clearance_proportion)))
+      }
   } else {
-    entropy <- - (death_proportion * log2(death_proportion) + (1-death_proportion) * log2(1-death_proportion)) #  entropy calculation
+      # General case (persist_proportion is not 0)
+      entropy <- - (death_proportion * log(death_proportion) + 
+                    clearance_proportion * log(clearance_proportion) +
+                    persist_proportion * log(persist_proportion))
   }
   
   pd_cd_results_mid1$Entropy[temp_idx] <- entropy
@@ -1000,17 +1030,18 @@ for (temp_idx in seq_along(temperatures)) {
   } else {
     prop_deaths_vec <- rep(c(0, 1), times = c(num_sims - death_count, death_count))
   
-    min_deaths <- 4  # minimum threshold
+    min_deaths <- 3  # minimum threshold
   
-    if (death_count >= min_deaths) {  # Check for minimum threshold
-        sd_prop_deaths <- sd(prop_deaths_vec)
-        mean_prop_deaths <- mean(prop_deaths_vec)
-        prop_death_cv <- sd_prop_deaths / mean_prop_deaths
-    } else {
-        prop_death_cv <- NA # Not enough deaths for reliable calculation
-    }
+      if (death_count >= min_deaths) {
+          # Bernoulli variance calculation
+          variance_prop_deaths <- proportion_deaths * (1 - proportion_deaths) # Correct variance calculation
+          sd_prop_deaths <- sqrt(variance_prop_deaths) # Correct SD calculation
+          prop_death_cv <- sd_prop_deaths / proportion_deaths # Correct CV calculation
+      } else {
+          prop_death_cv <- NA
+      }
   }
-  
+
   pd_cd_results_mid1$Prop_Death_CoefVar[temp_idx] <- prop_death_cv
 }
 
@@ -1071,15 +1102,27 @@ for (temp_idx in seq_along(temperatures)) {
   proportion_deaths <- death_count / num_sims
   pd_cd_results_mid2$Proportion_Deaths[temp_idx] <- proportion_deaths
 
-  # Calculate Entropy
+  # Calculate Entropy (multinomial distribution and using natural logs)
   clearance_count <- sum(!is.na(clearance_days)) # Count clearance events
-  death_proportion <- death_count / num_sims
-  clearance_proportion <- clearance_count/num_sims # proportion of clearance events
-
-  if (clearance_proportion == 0 || death_proportion == 0) {
-    entropy <- 0 # Entropy is 0 if all outcomes are the same (all death or all clearance)
+  death_proportion <- round((death_count / num_sims), 10) #proportion of death events
+  clearance_proportion <- round((clearance_count/num_sims), 10) # proportion of clearance events
+  persist_proportion <- round((1 - death_proportion - clearance_proportion), 10)
+  
+  entropy <- 0  # Initialize
+  
+  # Calculate entropy 
+  if (persist_proportion == 0) {
+      # Handle the case where persist_proportion is 0
+      if (death_proportion == 0 || clearance_proportion == 0) {
+        entropy <- 0 # Entropy is 0 if all outcomes are the same (all death or all clearance)
+      } else {
+        entropy <- - (death_proportion * log(death_proportion) + (clearance_proportion * log(clearance_proportion)))
+      }
   } else {
-    entropy <- - (death_proportion * log2(death_proportion) + (1-death_proportion) * log2(1-death_proportion)) #  entropy calculation
+      # General case (persist_proportion is not 0)
+      entropy <- - (death_proportion * log(death_proportion) + 
+                    clearance_proportion * log(clearance_proportion) +
+                    persist_proportion * log(persist_proportion))
   }
   
   pd_cd_results_mid2$Entropy[temp_idx] <- entropy
@@ -1103,17 +1146,18 @@ for (temp_idx in seq_along(temperatures)) {
   } else {
     prop_deaths_vec <- rep(c(0, 1), times = c(num_sims - death_count, death_count))
   
-    min_deaths <- 4  # minimum threshold
+    min_deaths <- 3  # minimum threshold
   
-    if (death_count >= min_deaths) {  # Check for minimum threshold
-        sd_prop_deaths <- sd(prop_deaths_vec)
-        mean_prop_deaths <- mean(prop_deaths_vec)
-        prop_death_cv <- sd_prop_deaths / mean_prop_deaths
-    } else {
-        prop_death_cv <- NA # Not enough deaths for reliable calculation
-    }
+      if (death_count >= min_deaths) {
+          # Bernoulli variance calculation
+          variance_prop_deaths <- proportion_deaths * (1 - proportion_deaths) # Correct variance calculation
+          sd_prop_deaths <- sqrt(variance_prop_deaths) # Correct SD calculation
+          prop_death_cv <- sd_prop_deaths / proportion_deaths # Correct CV calculation
+      } else {
+          prop_death_cv <- NA
+      }
   }
-  
+
   pd_cd_results_mid2$Prop_Death_CoefVar[temp_idx] <- prop_death_cv
 }
 
@@ -1173,15 +1217,27 @@ for (temp_idx in seq_along(temperatures)) {
   proportion_deaths <- death_count / num_sims
   pd_cd_results_mid3$Proportion_Deaths[temp_idx] <- proportion_deaths
 
-  # Calculate Entropy
+  # Calculate Entropy (multinomial distribution and using natural logs)
   clearance_count <- sum(!is.na(clearance_days)) # Count clearance events
-  death_proportion <- death_count / num_sims
-  clearance_proportion <- clearance_count/num_sims # proportion of clearance events
-
-  if (clearance_proportion == 0 || death_proportion == 0) {
-    entropy <- 0 # Entropy is 0 if all outcomes are the same (all death or all clearance)
+  death_proportion <- round((death_count / num_sims), 10) #proportion of death events
+  clearance_proportion <- round((clearance_count/num_sims), 10) # proportion of clearance events
+  persist_proportion <- round((1 - death_proportion - clearance_proportion), 10)
+  
+  entropy <- 0  # Initialize
+  
+  # Calculate entropy 
+  if (persist_proportion == 0) {
+      # Handle the case where persist_proportion is 0
+      if (death_proportion == 0 || clearance_proportion == 0) {
+        entropy <- 0 # Entropy is 0 if all outcomes are the same (all death or all clearance)
+      } else {
+        entropy <- - (death_proportion * log(death_proportion) + (clearance_proportion * log(clearance_proportion)))
+      }
   } else {
-    entropy <- - (death_proportion * log2(death_proportion) + (1-death_proportion) * log2(1-death_proportion)) #  entropy calculation
+      # General case (persist_proportion is not 0)
+      entropy <- - (death_proportion * log(death_proportion) + 
+                    clearance_proportion * log(clearance_proportion) +
+                    persist_proportion * log(persist_proportion))
   }
   
   pd_cd_results_mid3$Entropy[temp_idx] <- entropy
@@ -1206,15 +1262,16 @@ for (temp_idx in seq_along(temperatures)) {
   } else {
     prop_deaths_vec <- rep(c(0, 1), times = c(num_sims - death_count, death_count))
   
-    min_deaths <- 4  # minimum threshold
+    min_deaths <- 3  # minimum threshold
   
-    if (death_count >= min_deaths) {  # Check for minimum threshold
-        sd_prop_deaths <- sd(prop_deaths_vec)
-        mean_prop_deaths <- mean(prop_deaths_vec)
-        prop_death_cv <- sd_prop_deaths / mean_prop_deaths
-    } else {
-        prop_death_cv <- NA # Not enough deaths for reliable calculation
-    }
+      if (death_count >= min_deaths) {
+          # Bernoulli variance calculation
+          variance_prop_deaths <- proportion_deaths * (1 - proportion_deaths) # Correct variance calculation
+          sd_prop_deaths <- sqrt(variance_prop_deaths) # Correct SD calculation
+          prop_death_cv <- sd_prop_deaths / proportion_deaths # Correct CV calculation
+      } else {
+          prop_death_cv <- NA
+      }
   }
   
   pd_cd_results_mid3$Prop_Death_CoefVar[temp_idx] <- prop_death_cv
@@ -1276,15 +1333,27 @@ for (temp_idx in seq_along(temperatures)) {
   proportion_deaths <- death_count / num_sims
   pd_cd_results_null$Proportion_Deaths[temp_idx] <- proportion_deaths
 
-  # Calculate Entropy
+  # Calculate Entropy (multinomial distribution and using natural logs)
   clearance_count <- sum(!is.na(clearance_days)) # Count clearance events
-  death_proportion <- death_count / num_sims
-  clearance_proportion <- clearance_count/num_sims # proportion of clearance events
-
-  if (clearance_proportion == 0 || death_proportion == 0) {
-    entropy <- 0 # Entropy is 0 if all outcomes are the same (all death or all clearance)
+  death_proportion <- round((death_count / num_sims), 10) #proportion of death events
+  clearance_proportion <- round((clearance_count/num_sims), 10) # proportion of clearance events
+  persist_proportion <- round((1 - death_proportion - clearance_proportion), 10)
+  
+  entropy <- 0  # Initialize
+  
+  # Calculate entropy 
+  if (persist_proportion == 0) {
+      # Handle the case where persist_proportion is 0
+      if (death_proportion == 0 || clearance_proportion == 0) {
+        entropy <- 0 # Entropy is 0 if all outcomes are the same (all death or all clearance)
+      } else {
+        entropy <- - (death_proportion * log(death_proportion) + (clearance_proportion * log(clearance_proportion)))
+      }
   } else {
-    entropy <- - (death_proportion * log2(death_proportion) + (1-death_proportion) * log2(1-death_proportion)) #  entropy calculation
+      # General case (persist_proportion is not 0)
+      entropy <- - (death_proportion * log(death_proportion) + 
+                    clearance_proportion * log(clearance_proportion) +
+                    persist_proportion * log(persist_proportion))
   }
   
   pd_cd_results_null$Entropy[temp_idx] <- entropy
@@ -1309,15 +1378,16 @@ for (temp_idx in seq_along(temperatures)) {
   } else {
     prop_deaths_vec <- rep(c(0, 1), times = c(num_sims - death_count, death_count))
   
-    min_deaths <- 4  # minimum threshold
+    min_deaths <- 3  # minimum threshold
   
-    if (death_count >= min_deaths) {  # Check for minimum threshold
-        sd_prop_deaths <- sd(prop_deaths_vec)
-        mean_prop_deaths <- mean(prop_deaths_vec)
-        prop_death_cv <- sd_prop_deaths / mean_prop_deaths
-    } else {
-        prop_death_cv <- NA # Not enough deaths for reliable calculation
-    }
+      if (death_count >= min_deaths) {
+          # Bernoulli variance calculation
+          variance_prop_deaths <- proportion_deaths * (1 - proportion_deaths) # Correct variance calculation
+          sd_prop_deaths <- sqrt(variance_prop_deaths) # Correct SD calculation
+          prop_death_cv <- sd_prop_deaths / proportion_deaths # Correct CV calculation
+      } else {
+          prop_death_cv <- NA
+      }
   }
   
   pd_cd_results_null$Prop_Death_CoefVar[temp_idx] <- prop_death_cv
@@ -1375,15 +1445,15 @@ ent_data <- data.frame(
   Scenario = rep(c("High Mismatch", "Mid 1 Mismatch", "Mid 2 Mismatch", "Mid 3 Mismatch", "No Mismatch"), each = length(temperatures))
 )
 
-ent_data$Legend_Label <- "Variability in Outcomes"
+ent_data$Legend_Label <- "Entropy"
 
 # create the facetwrapped plot: 
 ent_plot <- ggplot(ent_data, aes(x = Temperature, y = Entropy, color = Legend_Label)) +
   geom_line(linewidth = 1) + 
   facet_wrap(~ Scenario, ncol = 1) + 
-  scale_color_manual(values = c("Variability in Outcomes" = "blue")) + 
+  scale_color_manual(values = c("Entropy" = "blue")) + 
     theme_bw() + 
-  labs(x = "Temperature (°C)", y = "Shannon Entropy",
+  labs(x = "Temperature (°C)", y = "Entropy",
        color = NULL, title = "D. Outcome Variability (Entropy)") + 
   theme(strip.text = element_text(size = 15),
         legend.position = "bottom",
@@ -1393,11 +1463,13 @@ ent_plot <- ggplot(ent_data, aes(x = Temperature, y = Entropy, color = Legend_La
         legend.text = element_text(size = 13))
 
 ent_plot
-  
+
+ggsave("Figures/Entropy.pdf", plot = ent_plot,
+       device = "pdf", width = 6, height = 10)
 ```
 
 #### Plot Proportion of death over Entropy:
-```{r, fig.height=10, fig.width=6}
+```{r, fig.height=12, fig.width=8}
 # Rename the columns to be consistent
 names(ent_data)[names(ent_data) == "Entropy"] <- "Value"
 names(death_data)[names(death_data) == "Proportion_Deaths"] <- "Value"
@@ -1411,27 +1483,37 @@ combined_data <- rbind(
 combined_data$Temperature <- as.numeric(combined_data$Temperature)
 
 # Create the plot
-combined_plot <- ggplot(combined_data, aes(x = Temperature, y = Value, linetype = Metric)) + 
+entropy_propdeath_plot <- ggplot(combined_data, aes(x = Temperature, y = Value, linetype = Metric)) + 
   geom_line(size = 1, aes(color = Metric)) + 
   facet_wrap(~ Scenario, ncol = 1) +
-  labs(x = "Temperature (°C)", y = "Value", linetype = "Metric", title = "Proportion of Deaths vs. Entropy") +
+  labs(x = "Temperature (°C)", y = "Entropy", linetype = NULL, color = NULL) +
+  labs(title = "Entropy vs. Proportion of Deaths across a Thermal Gradient") +
+  scale_y_continuous(sec.axis = sec_axis(~ ., name = "Proportion of Deaths")) +
   scale_linetype_manual(values = c("Entropy" = "solid", "Proportion_Deaths" = "dashed")) +
   scale_color_manual(values = c("Entropy" = "blue", "Proportion_Deaths" = "red")) +
   theme_bw() +
   theme(strip.text = element_text(size = 15),
         legend.position = "bottom",
         plot.title = element_text(hjust = 0.5, size = 18, face = "bold"),
-        axis.title = element_text(size = 15),
+        axis.title.y.left = element_text(size = 15),   
+        axis.title.y.right = element_text(size = 15),   
         axis.text = element_text(size = 13),
         legend.text = element_text(size = 13))
 
-combined_plot
+entropy_propdeath_plot
+
+
+#ggsave("Figures/Entropy_PropDeath.pdf", plot = entropy_propdeath_plot,
+#       device = "pdf", width = 8, height = 12)
+
+#ggsave("Figures/FullFigure_se.pdf", plot = all_plots_individual_sims, 
+#       device = "pdf", width = 25, height = 15)
 ```
 
 #### Plots for coefficient of variation:
 
 First, for the Coefficient of variation for the clearance days: 
-```{r, fig.height=10, fig.width=6}
+```{r, fig.height=8, fig.width=6}
 # Data frame for CV results
 cv_data <- data.frame(
   Temperature = rep(temperatures, times = 5),
@@ -1464,7 +1546,7 @@ cv_plot
 ```
 
 Now for Coefficient of Variation for Proportion of deaths:
-```{r, fig.height=10, fig.width=6, warning=FALSE}
+```{r, fig.height=8, fig.width=6, warning=FALSE}
 # Data frame for CV results
 prop_death_cv_data <- data.frame(
   Temperature = rep(temperatures, times = 5),
@@ -1535,7 +1617,7 @@ grid.lines(x = c(prop3, prop3), y = c(0, 1),
            gp = gpar(col = "black", lwd = 2))
 invisible(all_plots_individual_sims)
 
-#ggsave("Figures/FullFigure_se.pdf", plot = all_plots_individual_sims, 
+#ggsave("Figures/FullFigure.pdf", plot = all_plots_individual_sims, 
 #       device = "pdf", width = 25, height = 15)
 ```
 
