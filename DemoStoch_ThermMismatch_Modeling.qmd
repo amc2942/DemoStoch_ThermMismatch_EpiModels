@@ -713,52 +713,6 @@ summary_results <- all_combined_results %>%
   )
 ```
 
-Geom_ribbon() to show 95% CI and variability for each scenario/temp plot
-```{r, warning = FALSE, fig.height = 10, fig.width=10}
-# Create the figure (facet_wrap, rows are scenarios, columns are temperatures)
-scenario_by_temp_plot_variability <- ggplot(summary_results, aes(x = Day)) + 
-  # V_vec
-  geom_ribbon(aes(ymin = V_low, ymax = V_high, fill = "V_vec"), alpha = 0.3) + 
-  geom_line(aes(y = V_median, color = "V_vec"), size = 1.2) + 
-  # Z_vec
-  geom_ribbon(aes(ymin = Z_low, ymax = Z_high, fill = "Z_vec"), alpha = 0.3) + 
-  geom_line(aes(y = Z_median, color = "Z_vec"), size = 1.2) + 
-  # facet by scenario and temperature
-  facet_grid(Scenario ~ Temperature,
-             labeller = labeller(Temperature = function(x) paste0(x, " °C"),
-                                 Scenario = function(x) paste0(x, " Mismatch"),
-                                 )) +
-  # aesthetics:
-  scale_fill_manual(
-    name = "Variable: ",
-    values = c("V_vec" = "red", "Z_vec" = "blue"),
-    labels = c("Viral Cell Load", "Immune Cell Load")
-  ) + 
-  scale_color_manual(
-    name = "Simulation: ",
-    values = c("V_vec" = "red", "Z_vec" = "blue"),
-    labels = c("Viral Cell Load", "Immune Cell Load")
-  ) + 
-  labs(title = "Results by Mismatch Scenario and by Temperature (95% CI)",
-       x = "Days",
-       y = "Within-Host Cell Density/Load") + 
-  theme_bw() + 
-  theme(legend.position = "bottom", 
-        legend.box = "horizontal",
-        panel.grid = element_line(color = "gray90"),
-        plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),
-        axis.title = element_text(size = 17),
-        axis.text = element_text(size = 15),
-        strip.text = element_text(size = 15),
-        legend.text = element_text(size = 15),
-        legend.title = element_text(size = 15))
-
-scenario_by_temp_plot_variability
-
-#ggsave("Figures/scenario_by_temp_plot_variability.pdf", plot = scenario_by_temp_plot_variability,
-#       device = "pdf", width = 10, height = 10)
-```
-
 Now a plot to show all individual simulations: 
 ```{r, warning=FALSE, fig.height=10, fig.width=10}
 individual_simulations <- all_combined_results %>% 
@@ -808,7 +762,7 @@ scenario_by_temp_plot_individualsims
 
 # Track the Proportion of deaths across thermal gradient and coefficient of variation in clearance days, entropy:
 
-These code blocks will track the proportion of death at each temperature along the sequence, as well as the coefficient of variation in days in which the host clears the pathogen (return NA if no clearance events). also trying Shannon entropy to quantify variability. The entropy is defined as the probability-weighted average of the logarithmized probabilities for all possible values:
+These code blocks will track the proportion of death at each temperature along the sequence, as well as the coefficient of variation in days in which the host clears the pathogen (return NA if no clearance events), as well as the coefficient of variation in death binary(0 no, 1 yes). also trying Shannon entropy to quantify variability. The entropy is defined as the probability-weighted average of the logarithmic probabilities for all possible values (natural log is 'nats' unit):
 
 $$
  \textbf{Entropy} \Rightarrow H(X) = - \sum p(x) * log (p(x))
@@ -871,9 +825,9 @@ for (temp_idx in seq_along(temperatures)) {
 
   # Calculate Entropy (multinomial distribution and using natural logs)
   clearance_count <- sum(!is.na(clearance_days)) # Count clearance events
-  death_proportion <- round((death_count / num_sims), 3) #proportion of death events
-  clearance_proportion <- round((clearance_count/num_sims), 3) # proportion of clearance events
-  persist_proportion <- round((1 - death_proportion - clearance_proportion), 3)
+  death_proportion <- round((death_count / num_sims), 15) #proportion of death events
+  clearance_proportion <- round((clearance_count/num_sims), 15) # proportion of clearance events
+  persist_proportion <- round((1 - death_proportion - clearance_proportion), 15)
   
   entropy <- 0  # Initialize
   
@@ -988,9 +942,9 @@ for (temp_idx in seq_along(temperatures)) {
 
   # Calculate Entropy (multinomial distribution and using natural logs)
   clearance_count <- sum(!is.na(clearance_days)) # Count clearance events
-  death_proportion <- round((death_count / num_sims), 3) #proportion of death events
-  clearance_proportion <- round((clearance_count/num_sims), 3) # proportion of clearance events
-  persist_proportion <- round((1 - death_proportion - clearance_proportion), 3)
+  death_proportion <- round((death_count / num_sims), 15) #proportion of death events
+  clearance_proportion <- round((clearance_count/num_sims), 15) # proportion of clearance events
+  persist_proportion <- round((1 - death_proportion - clearance_proportion), 15)
   
   entropy <- 0  # Initialize
   
@@ -1104,9 +1058,9 @@ for (temp_idx in seq_along(temperatures)) {
 
   # Calculate Entropy (multinomial distribution and using natural logs)
   clearance_count <- sum(!is.na(clearance_days)) # Count clearance events
-  death_proportion <- round((death_count / num_sims), 10) #proportion of death events
-  clearance_proportion <- round((clearance_count/num_sims), 10) # proportion of clearance events
-  persist_proportion <- round((1 - death_proportion - clearance_proportion), 10)
+  death_proportion <- round((death_count / num_sims), 15) #proportion of death events
+  clearance_proportion <- round((clearance_count/num_sims), 15) # proportion of clearance events
+  persist_proportion <- round((1 - death_proportion - clearance_proportion), 15)
   
   entropy <- 0  # Initialize
   
@@ -1219,9 +1173,9 @@ for (temp_idx in seq_along(temperatures)) {
 
   # Calculate Entropy (multinomial distribution and using natural logs)
   clearance_count <- sum(!is.na(clearance_days)) # Count clearance events
-  death_proportion <- round((death_count / num_sims), 10) #proportion of death events
-  clearance_proportion <- round((clearance_count/num_sims), 10) # proportion of clearance events
-  persist_proportion <- round((1 - death_proportion - clearance_proportion), 10)
+  death_proportion <- round((death_count / num_sims), 15) #proportion of death events
+  clearance_proportion <- round((clearance_count/num_sims), 15) # proportion of clearance events
+  persist_proportion <- round((1 - death_proportion - clearance_proportion), 15)
   
   entropy <- 0  # Initialize
   
@@ -1335,9 +1289,9 @@ for (temp_idx in seq_along(temperatures)) {
 
   # Calculate Entropy (multinomial distribution and using natural logs)
   clearance_count <- sum(!is.na(clearance_days)) # Count clearance events
-  death_proportion <- round((death_count / num_sims), 10) #proportion of death events
-  clearance_proportion <- round((clearance_count/num_sims), 10) # proportion of clearance events
-  persist_proportion <- round((1 - death_proportion - clearance_proportion), 10)
+  death_proportion <- round((death_count / num_sims), 15) #proportion of death events
+  clearance_proportion <- round((clearance_count/num_sims), 15) # proportion of clearance events
+  persist_proportion <- round((1 - death_proportion - clearance_proportion), 15)
   
   entropy <- 0  # Initialize
   
@@ -1468,48 +1422,6 @@ ggsave("Figures/Entropy.pdf", plot = ent_plot,
        device = "pdf", width = 6, height = 10)
 ```
 
-#### Plot Proportion of death over Entropy:
-```{r, fig.height=12, fig.width=8}
-# Rename the columns to be consistent
-names(ent_data)[names(ent_data) == "Entropy"] <- "Value"
-names(death_data)[names(death_data) == "Proportion_Deaths"] <- "Value"
-
-# Combine the data for plotting
-combined_data <- rbind(
-  cbind(ent_data, Metric = "Entropy"),
-  cbind(death_data, Metric = "Proportion_Deaths")
-)
-# Convert Temperature to numeric for plotting
-combined_data$Temperature <- as.numeric(combined_data$Temperature)
-
-# Create the plot
-entropy_propdeath_plot <- ggplot(combined_data, aes(x = Temperature, y = Value, linetype = Metric)) + 
-  geom_line(size = 1, aes(color = Metric)) + 
-  facet_wrap(~ Scenario, ncol = 1) +
-  labs(x = "Temperature (°C)", y = "Entropy", linetype = NULL, color = NULL) +
-  labs(title = "Entropy vs. Proportion of Deaths across a Thermal Gradient") +
-  scale_y_continuous(sec.axis = sec_axis(~ ., name = "Proportion of Deaths")) +
-  scale_linetype_manual(values = c("Entropy" = "solid", "Proportion_Deaths" = "dashed")) +
-  scale_color_manual(values = c("Entropy" = "blue", "Proportion_Deaths" = "red")) +
-  theme_bw() +
-  theme(strip.text = element_text(size = 15),
-        legend.position = "bottom",
-        plot.title = element_text(hjust = 0.5, size = 18, face = "bold"),
-        axis.title.y.left = element_text(size = 15),   
-        axis.title.y.right = element_text(size = 15),   
-        axis.text = element_text(size = 13),
-        legend.text = element_text(size = 13))
-
-entropy_propdeath_plot
-
-
-#ggsave("Figures/Entropy_PropDeath.pdf", plot = entropy_propdeath_plot,
-#       device = "pdf", width = 8, height = 12)
-
-#ggsave("Figures/FullFigure_se.pdf", plot = all_plots_individual_sims, 
-#       device = "pdf", width = 25, height = 15)
-```
-
 #### Plots for coefficient of variation:
 
 First, for the Coefficient of variation for the clearance days: 
@@ -1587,8 +1499,7 @@ invisible(death_data_combine)
 # Display all plots side by side: 
 ```{r}
 p1 <- quad_param_plot
-p2_a <- scenario_by_temp_plot_variability
-p2_b <- scenario_by_temp_plot_individualsims
+p2 <- scenario_by_temp_plot_individualsims
 p3 <- death_plot
 p4 <- ent_plot
 
@@ -1603,7 +1514,7 @@ prop3 <- (widths[1] + widths[2] + widths[3]) / total_width
 #### Plot with all individual simulations
 ```{r, warning=FALSE, fig.height=15, fig.width=25}
 all_plots_individual_sims <- gridExtra::grid.arrange(
-  p1, p2_b, p3, p4,
+  p1, p2, p3, p4,
   ncol = 4,
   widths = widths, 
   padding = unit(1.5, "cm")
@@ -1619,23 +1530,6 @@ invisible(all_plots_individual_sims)
 
 #ggsave("Figures/FullFigure.pdf", plot = all_plots_individual_sims, 
 #       device = "pdf", width = 25, height = 15)
-```
-
-#### Plot with Mismatch scenarios and Death plot
-```{r, warning=FALSE, fig.height=13, fig.width = 16}
-widths_2 <- c(1.25, 0.75)
-total_width_2 <- sum(widths_2)
-prop1_2 <- widths_2[1] / total_width_2
-
-outcome_propdeath_plot <- gridExtra::grid.arrange(p2_b, p3,
-                                                 ncol = 2,
-                                                 widths = widths_2,
-                                                 padding = unit(1.5, "cm"))
-grid.lines(x = c(prop1_2, prop1_2), y = c(0, 1),
-           gp = gpar(col = "black", lwd = 2))
-
-#ggsave("Figures/outcome_propdeath_plot.pdf", plot = outcome_propdeath_plot,
-#       device = "pdf", width = 16, height = 13)
 ```
 
 
@@ -1710,19 +1604,75 @@ phi_alpha_range_plot
 #       device = "pdf", width = 8, height = 8)
 ```
 
-#### Proportion of Death and Outcome variability
+# Plot for Heatmap of Model Outcomes with different values of Phi and Psi
 
-```{r, fig.height=8, fig.width=12}
-widths_3 <- c(1, 1)
-total_width_3 <- sum(widths_3)
-prop1_3 <- widths_3[1] / total_width_3
+This chunk takes a while to run, 25 x 25 parameter combinations with 100 simulations each....
+```{r, warning = FALSE}
+# Define synthetic range for phi and psi\
+phi_vals_hm <- seq(2.2, 2.6, length.out = 25)
+psi_vals_hm <- seq(0.95, 1.2, length.out = 25)
 
-propdeath_variability_plot <- gridExtra::grid.arrange(p3, p4,
-                                                 ncol = 2,
-                                                 widths = widths_3,
-                                                 padding = unit(1.5, "cm"))
-grid.lines(x = c(prop1_3, prop1_3), y = c(0, 1),
-           gp = gpar(col = "black", lwd = 2))
+# Dataframe for grid results
+death_prop_grid2 <- expand.grid(phi = phi_vals_hm, psi = psi_vals_hm)
+death_prop_grid2$Proportion_Deaths <- NA
+
+# Model run looping through all param combinations
+for (i in seq_len(nrow(death_prop_grid2))) {
+  phi <- death_prop_grid2$phi[i]
+  psi <- death_prop_grid2$psi[i]
+  
+  #Set all params
+  params <- list(
+    phi = phi,
+    alpha = 1.75, 
+    delta = 1.29,
+    psi = psi,
+    gamma = 0.13,
+    N_z = 1.29 * 0.35, 
+    z_scalar = z_scalar
+  )
+  
+  death_count_hm <- 0
+  for(sim in 1:num_sims){
+    hm_sim_results <- model_simulation(
+      V_vec = V_vec,
+      Z_vec = Z_vec, 
+      params = params, 
+      death_threshold = death_threshold,
+      clearance_threshold = clearance_threshold
+    )
+    
+    if(max(hm_sim_results$V_vec, na.rm = TRUE) >= death_threshold){
+      death_count_hm <- death_count_hm + 1
+    }
+  }
+  
+  death_prop_grid2$Proportion_Deaths[i] <- death_count_hm / num_sims
+}
+```
+
+#### Plot (Heatmap with geom_tile)
+```{r, warning=FALSE, fig.height=8, fig.width=8}
+phi_psi_range_plot <- ggplot(death_prop_grid2, 
+                               aes(x = phi, y = psi, fill = Proportion_Deaths)) +
+  geom_tile() + 
+  scale_fill_viridis_c(option = "mako", limits = c(0,1), direction = -1) + 
+  theme_bw() + 
+  labs(title = "Outcomes across a Range of Parameter Values",
+       x = "Phi Parameter Range",
+       y = "Psi Parameter Range", 
+       fill = "Proportion Deaths") + 
+  theme(plot.title = element_text(size = 16, hjust = 0.5, face = "bold"),
+        axis.title = element_text(size = 14),
+        axis.text = element_text(size = 12),
+        legend.position = "right", 
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 14))
+
+phi_psi_range_plot
+
+#ggsave("Figures/phi_psi_range_plot.pdf", plot = phi_psi_range_plot,
+#       device = "pdf", width = 8, height = 8)
 ```
 
 
