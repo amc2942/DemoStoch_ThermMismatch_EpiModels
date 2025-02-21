@@ -61,7 +61,7 @@ $$
 
 ```{r}
 # Generate temperature range
-temperatures <- seq(9, 16, length.out = 50)
+temperatures <- seq(4, 21, length.out = 50)
 ```
 
 Estimating the Range of Parameter Phi (Viral Replication Rate)
@@ -73,7 +73,7 @@ estimate_phi <- function(temperature, q_phi, tmin_phi, tmax_phi) {
 }
 
 # Set q for phi
-q_phi <- 0.0145
+q_phi <- 0.01471
 # Set temperature range
 tmin_phi <- 1
 tmax_phi <- 30
@@ -98,7 +98,7 @@ estimate_alpha <- function(temperature, q_alpha, tmin_alpha, tmax_alpha){
 }
 
 # Set q value for alpha 
-q_alpha <- 0.0097
+q_alpha <- 0.0117
 # Set temperature range
 tmin_alpha <- -5
 tmax_alpha <- 24
@@ -338,8 +338,16 @@ temp_peak_alpha_null <- (tmin_alpha_null + tmax_alpha_null) / 2
 peak_alpha_null <- estimate_alpha(temp_peak_alpha_null, q_alpha, tmin_alpha_null, tmax_alpha_null)
 ```
 
+Set the Temperatures we want to check individual simulations: 
+```{r}
+# Set temperatures to check: 
+temp_checks <- c(9.5, 12.5, 15.5)
+temp_check_data <- data.frame(Temperature = temp_checks)
+```
+
+
 #### Now we can plot the scenarios: 
-```{r, fig.height = 10, fig.width = 5}
+```{r, fig.height = 10, fig.width = 5, warning=FALSE}
 param_function_plot_data <- data.frame(
   Temperature = rep(temperatures, 5), 
   Normalized_Phi = c(norm_phi_high, norm_phi_mid1, norm_phi_mid2, norm_phi_mid3, norm_phi_null), 
@@ -368,14 +376,24 @@ quad_param_plot <- ggplot(quad_param_plot_data,
   geom_line(linewidth = 1) + 
   facet_wrap(~ Scenario, ncol = 1,
              labeller = labeller(Scenario = c("No Mismatch" = "No Mismatch (Functions Overlap)",
-                                              "High Mismatch" = "High Mismatch",
-                                              "Mid 1 Mismatch" = "Mid 1 Mismatch", 
-                                              "Mid 2 Mismatch" = "Mid 2 Mismatch",
-                                              "Mid 3 Mismatch" = "Mid 3 Mismatch"))) +
+                                              "High Mismatch" = "High Mismatch (6°C difference)",
+                                              "Mid 1 Mismatch" = "Mid 1 Mismatch (4.5°C difference)", 
+                                              "Mid 2 Mismatch" = "Mid 2 Mismatch (3°C difference)",
+                                              "Mid 3 Mismatch" = "Mid 3 Mismatch (1.5°C difference)"))) +
   scale_color_manual(values = c("Normalized_Phi" = "red", "Normalized_Alpha" = "blue"),
                      labels = c("Phi (Virus)", "Alpha (Host)")) + 
-  geom_vline(aes(xintercept = Temp_Peak_Phi_opt), linetype = "dashed", col = "red", linewidth = 0.8) + 
-  geom_vline(aes(xintercept = Temp_Peak_Alpha_opt), linetype = "dashed", col = "blue", linewidth = 0.8) +
+  geom_vline(data = temp_check_data, aes(xintercept = Temperature), 
+             linetype = "dashed", color = "black", alpha = 0.8) +
+  geom_text(data = temp_check_data, 
+            aes(x = Temperature, 
+                y = min(quad_param_plot_data$Normalized_Value) - 0.05,  # Adjust this value to move labels lower
+                label = paste0(Temperature, "°C")),
+            hjust = 1.1,  # Move labels to the left of the line
+            vjust = 0,   # Center labels vertically
+            angle = 0,     # Remove angle
+            color = "black", 
+            size = 4) +
+  xlim(4,21) + 
   theme_bw() + 
   labs(x = "Temperature (°C)", y = "Parameter Values (Normalized)", 
        color = "Parameter:", title = "A. Thermal Mismatch Scenarios") +
@@ -419,9 +437,6 @@ Z_vec[1] <- rpois(1, 0.35*z_scalar)  # Initial immune component density
 
 # Set number of iterations per scenario per temperature: 
 num_sims <- 100
-
-# Set temperatures to check: 
-temp_checks <- c(9.5, 12.5, 15.5)
 ```
 
 #### High mismatch
@@ -429,13 +444,27 @@ temp_checks <- c(9.5, 12.5, 15.5)
 # Store results for high mismatch: 
 results_high <- list()
 
+# Data frame to store parameter values
+param_values_high <- data.frame(
+  Temperature = numeric(),
+  Phi = numeric(),
+  Alpha = numeric()
+)
+
 # Loop through each set temperature for high mismatch scenario: 
 for (temp in temp_checks) {
   
   # Temp-specific parameters: 
   phi_high <- estimate_phi(temp, q_phi, tmin_phi_high, tmax_phi_high)
   alpha_high <- estimate_alpha(temp, q_phi, tmin_alpha_high, tmax_alpha_high)
-  
+
+  # store parameters for later use
+  param_values_high <- rbind(param_values_high, data.frame(
+    Temperature = temp,
+    Phi = phi_high,
+    Alpha = alpha_high
+  ))
+
   # All Parms: 
   params_high <- list(
     phi = phi_high,
@@ -480,12 +509,26 @@ for (temp in temp_checks) {
 # Store results for mid 1 mismatch: 
 results_mid1 <- list()
 
+# Data frame to store parameter values
+param_values_mid1 <- data.frame(
+  Temperature = numeric(),
+  Phi = numeric(),
+  Alpha = numeric()
+)
+
 # Loop through each set temperature for mid 1 mismatch scenario: 
 for (temp in temp_checks) {
   
   # Temp-specific parameters: 
   phi_mid1 <- estimate_phi(temp, q_phi, tmin_phi_mid1, tmax_phi_mid1)
   alpha_mid1 <- estimate_alpha(temp, q_phi, tmin_alpha_mid1, tmax_alpha_mid1)
+  
+  # store parameters for later use
+  param_values_mid1 <- rbind(param_values_mid1, data.frame(
+  Temperature = temp,
+  Phi = phi_mid1,
+  Alpha = alpha_mid1
+))
   
   # All Parms: 
   params_mid1 <- list(
@@ -531,12 +574,26 @@ for (temp in temp_checks) {
 # Store results for mid 2 mismatch: 
 results_mid2 <- list()
 
+# Data frame to store parameter values
+param_values_mid2 <- data.frame(
+  Temperature = numeric(),
+  Phi = numeric(),
+  Alpha = numeric()
+)
+
 # Loop through each set temperature for mid 2 mismatch scenario: 
 for (temp in temp_checks) {
   
   # Temp-specific parameters: 
   phi_mid2 <- estimate_phi(temp, q_phi, tmin_phi_mid2, tmax_phi_mid2)
   alpha_mid2 <- estimate_alpha(temp, q_phi, tmin_alpha_mid2, tmax_alpha_mid2)
+  
+  # store parameters for later use
+  param_values_mid2 <- rbind(param_values_mid2, data.frame(
+  Temperature = temp,
+  Phi = phi_mid2,
+  Alpha = alpha_mid2
+))
   
   # All Parms: 
   params_mid2 <- list(
@@ -581,12 +638,26 @@ for (temp in temp_checks) {
 # Store results for mid 3 mismatch: 
 results_mid3 <- list()
 
+# Data frame to store parameter values
+param_values_mid3 <- data.frame(
+  Temperature = numeric(),
+  Phi = numeric(),
+  Alpha = numeric()
+)
+
 # Loop through each set temperature for mid 3 mismatch scenario: 
 for (temp in temp_checks) {
   
   # Temp-specific parameters: 
   phi_mid3 <- estimate_phi(temp, q_phi, tmin_phi_mid3, tmax_phi_mid3)
   alpha_mid3 <- estimate_alpha(temp, q_phi, tmin_alpha_mid3, tmax_alpha_mid3)
+  
+  # store parameters for later use
+  param_values_mid3 <- rbind(param_values_mid3, data.frame(
+  Temperature = temp,
+  Phi = phi_mid3,
+  Alpha = alpha_mid3
+))
   
   # All Parms: 
   params_mid3 <- list(
@@ -631,11 +702,25 @@ for (temp in temp_checks) {
 # Store results for mid 2 mismatch: 
 results_null <- list()
 
+# Data frame to store parameter values
+param_values_null <- data.frame(
+  Temperature = numeric(),
+  Phi = numeric(),
+  Alpha = numeric()
+)
+
 # Loop through each set temperature for mid 2 mismatch scenario: 
 for (temp in temp_checks) {
   # Temp-specific parameters: 
   phi_null <- estimate_phi(temp, q_phi, tmin_phi_null, tmax_phi_null)
   alpha_null <- estimate_alpha(temp, q_phi, tmin_alpha_null, tmax_alpha_null)
+  
+  # store parameters for later use
+  param_values_null <- rbind(param_values_null, data.frame(
+  Temperature = temp,
+  Phi = phi_null,
+  Alpha = alpha_null
+))
   
   # All Parms: 
   params_null <- list(
@@ -674,6 +759,19 @@ for (temp in temp_checks) {
   results_null[[paste0("Temp", temp)]] <- temp_results_null_df
 }
 ```
+
+#### Combine all the parameter values into one dataframe:
+```{r}
+all_param_values <- rbind(
+  cbind(Scenario = "High Mismatch", param_values_high),
+  cbind(Scenario = "Mid 1 Mismatch", param_values_mid1),
+  cbind(Scenario = "Mid 2 Mismatch", param_values_mid2),
+  cbind(Scenario = "Mid 3 Mismatch", param_values_mid3),
+  cbind(Scenario = "No Mismatch", param_values_null)
+)
+```
+
+
 
 #### Create plot with all results (5 Scenarios, 3 Temps each)
 ```{r}
@@ -762,24 +860,31 @@ scenario_by_temp_plot_individualsims
 
 # Track the Proportion of deaths across thermal gradient and coefficient of variation in clearance days, entropy:
 
-These code blocks will track the proportion of death at each temperature along the sequence, as well as the coefficient of variation in days in which the host clears the pathogen (return NA if no clearance events), as well as the coefficient of variation in death binary(0 no, 1 yes). also trying Shannon entropy to quantify variability. The entropy is defined as the probability-weighted average of the logarithmic probabilities for all possible values (natural log is 'nats' unit):
+These code blocks will track the proportion of death at each temperature along the sequence, as well as the coefficient of variation in days in which the host clears the pathogen (return NA if no clearance events), as well as the coefficient of variation in death binary(0 no, 1 yes). also trying  entropy to quantify variability. The entropy is defined as the probability-weighted average of the logarithmic probabilities for all possible values (natural log is 'nats' unit):
 
 $$
  \textbf{Entropy} \Rightarrow H(X) = - \sum p(x) * log (p(x))
 $$
 
+Smaller temp range: 
+```{r}
+temperatures_smaller <- seq(9, 16, length.out = 50)
+```
+
+
 #### High Mismatch: 
 ```{r, warning=FALSE}
 # Data frame to store both metrics for high mismatch
-pd_cd_results_high <- data.frame(Temperature = temperatures, 
+pd_cd_results_high <- data.frame(Temperature = temperatures_smaller, 
                                  Proportion_Deaths = NA, 
                                  Entropy = NA, 
                                  Coef_Variation = NA,
-                                 Prop_Death_CoefVar = NA)
+                                 Prop_Death_CoefVar = NA,
+                                 Crossing_Temperature = NA)
 
 # Loop through each temperature
-for (temp_idx in seq_along(temperatures)) {
-  temp <- temperatures[temp_idx]
+for (temp_idx in seq_along(temperatures_smaller)) {
+  temp <- temperatures_smaller[temp_idx]
   
   # Temp-specific parameters
   phi_high <- estimate_phi(temp, q_phi, tmin_phi_high, tmax_phi_high)
@@ -831,23 +936,32 @@ for (temp_idx in seq_along(temperatures)) {
   
   entropy <- 0  # Initialize
   
+  # Avoid log(0) issues
+  safe_log <- function(x) ifelse(x >= 0.001, log(x), 0)
+
   # Calculate entropy 
-  if (persist_proportion == 0) {
-      # Handle the case where persist_proportion is 0
-      if (death_proportion == 0 || clearance_proportion == 0) {
-        entropy <- 0 # Entropy is 0 if all outcomes are the same (all death or all clearance)
+  if (persist_proportion <= 0.01) {
+      if (death_proportion <= 0.01 || clearance_proportion <= 0.01) {
+        entropy <- 0 # Entropy is 0 if all outcomes are the same
       } else {
-        entropy <- - (death_proportion * log(death_proportion) + (clearance_proportion * log(clearance_proportion)))
+        entropy <- - (death_proportion * safe_log(death_proportion) + 
+                      clearance_proportion * safe_log(clearance_proportion))
       }
   } else {
-      # General case (persist_proportion is not 0)
-      entropy <- - (death_proportion * log(death_proportion) + 
-                    clearance_proportion * log(clearance_proportion) +
-                    persist_proportion * log(persist_proportion))
+      entropy <- - (death_proportion * safe_log(death_proportion) + 
+                    clearance_proportion * safe_log(clearance_proportion) +
+                    persist_proportion * safe_log(persist_proportion))
   }
+  
     
   pd_cd_results_high$Entropy[temp_idx] <- entropy
   
+  # Check for crossing 50% threshold (only ONCE per temperature increase)
+    if (proportion_deaths >= 0.5 && is.na(pd_cd_results_high$Crossing_Temperature[temp_idx])) { # Check if it crosses 50% AND if we haven't recorded it already
+      pd_cd_results_high$Crossing_Temperature[temp_idx] <- temp # Store the temperature at which it crossed 50%
+    }
+  crossing_temp_high <- pd_cd_results_high$Crossing_Temperature[!is.na(pd_cd_results_high$Crossing_Temperature)][1]
+
   # Calculate Coefficient of Variation (Only if enough clearances, setting min threshold)
   clearance_days_finite <- clearance_days[!is.na(clearance_days)]
   min_survivors <- 10 
@@ -889,15 +1003,16 @@ for (temp_idx in seq_along(temperatures)) {
 #### Mid 1 Mismatch: 
 ```{r, warning=FALSE}
 # Data frame to store both metrics for mid1 mismatch
-pd_cd_results_mid1 <- data.frame(Temperature = temperatures, 
+pd_cd_results_mid1 <- data.frame(Temperature = temperatures_smaller, 
                                  Proportion_Deaths = NA, 
                                  Entropy = NA, 
                                  Coef_Variation = NA,
-                                 Prop_Death_CoefVar = NA)
+                                 Prop_Death_CoefVar = NA,
+                                 Crossing_Temperature = NA)
 
 # Loop through each temperature
-for (temp_idx in seq_along(temperatures)) {
-  temp <- temperatures[temp_idx]
+for (temp_idx in seq_along(temperatures_smaller)) {
+  temp <- temperatures_smaller[temp_idx]
   
   # Temp-specific parameters
   phi_mid1 <- estimate_phi(temp, q_phi, tmin_phi_mid1, tmax_phi_mid1)
@@ -948,22 +1063,31 @@ for (temp_idx in seq_along(temperatures)) {
   
   entropy <- 0  # Initialize
   
+  # Avoid log(0) issues
+  safe_log <- function(x) ifelse(x >= 0.001, log(x), 0)
+
   # Calculate entropy 
-  if (persist_proportion == 0) {
-      # Handle the case where persist_proportion is 0
-      if (death_proportion == 0 || clearance_proportion == 0) {
-        entropy <- 0 # Entropy is 0 if all outcomes are the same (all death or all clearance)
+  if (persist_proportion <= 0.01) {
+      if (death_proportion <= 0.01 || clearance_proportion <= 0.01) {
+        entropy <- 0 # Entropy is 0 if all outcomes are the same
       } else {
-        entropy <- - (death_proportion * log(death_proportion) + (clearance_proportion * log(clearance_proportion)))
+        entropy <- - (death_proportion * safe_log(death_proportion) + 
+                      clearance_proportion * safe_log(clearance_proportion))
       }
   } else {
-      # General case (persist_proportion is not 0)
-      entropy <- - (death_proportion * log(death_proportion) + 
-                    clearance_proportion * log(clearance_proportion) +
-                    persist_proportion * log(persist_proportion))
+      entropy <- - (death_proportion * safe_log(death_proportion) + 
+                    clearance_proportion * safe_log(clearance_proportion) +
+                    persist_proportion * safe_log(persist_proportion))
   }
   
+  
   pd_cd_results_mid1$Entropy[temp_idx] <- entropy
+  
+  # Check for crossing 50% threshold (only ONCE per temperature increase)
+  if (proportion_deaths >= 0.5 && is.na(pd_cd_results_mid1$Crossing_Temperature[temp_idx])) { # Check if it crosses 50% AND if we haven't recorded it already
+    pd_cd_results_mid1$Crossing_Temperature[temp_idx] <- temp # Store the temperature at which it crossed 50%
+  }
+  crossing_temp_mid1 <- pd_cd_results_mid1$Crossing_Temperature[!is.na(pd_cd_results_mid1$Crossing_Temperature)][1]
   
   # Calculate Coefficient of Variation (Only if enough clearances, setting min threshold)
   clearance_days_finite <- clearance_days[!is.na(clearance_days)]
@@ -1005,15 +1129,16 @@ for (temp_idx in seq_along(temperatures)) {
 #### Mid 2 Mismatch: 
 ```{r, warning=FALSE}
 # Data frame to store both metrics for mid2 mismatch
-pd_cd_results_mid2 <- data.frame(Temperature = temperatures, 
+pd_cd_results_mid2 <- data.frame(Temperature = temperatures_smaller, 
                                  Proportion_Deaths = NA, 
                                  Entropy = NA, 
                                  Coef_Variation = NA,
-                                 Prop_Death_CoefVar = NA)
+                                 Prop_Death_CoefVar = NA,
+                                 Crossing_Temperature = NA)
 
 # Loop through each temperature
-for (temp_idx in seq_along(temperatures)) {
-  temp <- temperatures[temp_idx]
+for (temp_idx in seq_along(temperatures_smaller)) {
+  temp <- temperatures_smaller[temp_idx]
   
   # Temp-specific parameters
   phi_mid2 <- estimate_phi(temp, q_phi, tmin_phi_mid2, tmax_phi_mid2)
@@ -1064,22 +1189,31 @@ for (temp_idx in seq_along(temperatures)) {
   
   entropy <- 0  # Initialize
   
+  # Avoid log(0) issues
+  safe_log <- function(x) ifelse(x >= 0.001, log(x), 0)
+
   # Calculate entropy 
-  if (persist_proportion == 0) {
-      # Handle the case where persist_proportion is 0
-      if (death_proportion == 0 || clearance_proportion == 0) {
-        entropy <- 0 # Entropy is 0 if all outcomes are the same (all death or all clearance)
+  if (persist_proportion <= 0.01) {
+      if (death_proportion <= 0.01 || clearance_proportion <= 0.01) {
+        entropy <- 0 # Entropy is 0 if all outcomes are the same
       } else {
-        entropy <- - (death_proportion * log(death_proportion) + (clearance_proportion * log(clearance_proportion)))
+        entropy <- - (death_proportion * safe_log(death_proportion) + 
+                      clearance_proportion * safe_log(clearance_proportion))
       }
   } else {
-      # General case (persist_proportion is not 0)
-      entropy <- - (death_proportion * log(death_proportion) + 
-                    clearance_proportion * log(clearance_proportion) +
-                    persist_proportion * log(persist_proportion))
+      entropy <- - (death_proportion * safe_log(death_proportion) + 
+                    clearance_proportion * safe_log(clearance_proportion) +
+                    persist_proportion * safe_log(persist_proportion))
   }
   
+  
   pd_cd_results_mid2$Entropy[temp_idx] <- entropy
+  
+  # Check for crossing 50% threshold (only ONCE per temperature increase)
+  if (proportion_deaths >= 0.5 && is.na(pd_cd_results_mid2$Crossing_Temperature[temp_idx])) { # Check if it crosses 50% AND if we haven't recorded it already
+    pd_cd_results_mid2$Crossing_Temperature[temp_idx] <- temp # Store the temperature at which it crossed 50%
+  }
+  crossing_temp_mid2 <- pd_cd_results_mid2$Crossing_Temperature[!is.na(pd_cd_results_mid2$Crossing_Temperature)][1]  
   
   # Calculate Coefficient of Variation (Only if enough clearances, setting min threshold)
   clearance_days_finite <- clearance_days[!is.na(clearance_days)]
@@ -1120,15 +1254,16 @@ for (temp_idx in seq_along(temperatures)) {
 #### Mid 3 Mismatch: 
 ```{r, warning=FALSE}
 # Data frame to store both metrics for mid3 mismatch
-pd_cd_results_mid3 <- data.frame(Temperature = temperatures, 
+pd_cd_results_mid3 <- data.frame(Temperature = temperatures_smaller, 
                                  Proportion_Deaths = NA, 
                                  Entropy = NA, 
                                  Coef_Variation = NA,
-                                 Prop_Death_CoefVar = NA)
+                                 Prop_Death_CoefVar = NA,
+                                 Crossing_Temperature = NA)
 
 # Loop through each temperature
-for (temp_idx in seq_along(temperatures)) {
-  temp <- temperatures[temp_idx]
+for (temp_idx in seq_along(temperatures_smaller)) {
+  temp <- temperatures_smaller[temp_idx]
   
   # Temp-specific parameters
   phi_mid3 <- estimate_phi(temp, q_phi, tmin_phi_mid3, tmax_phi_mid3)
@@ -1179,22 +1314,32 @@ for (temp_idx in seq_along(temperatures)) {
   
   entropy <- 0  # Initialize
   
+  # Avoid log(0) issues
+  safe_log <- function(x) ifelse(x >= 0.001, log(x), 0)
+
   # Calculate entropy 
-  if (persist_proportion == 0) {
-      # Handle the case where persist_proportion is 0
-      if (death_proportion == 0 || clearance_proportion == 0) {
-        entropy <- 0 # Entropy is 0 if all outcomes are the same (all death or all clearance)
+  if (persist_proportion <= 0.01) {
+      if (death_proportion <= 0.01 || clearance_proportion <= 0.01) {
+        entropy <- 0 # Entropy is 0 if all outcomes are the same
       } else {
-        entropy <- - (death_proportion * log(death_proportion) + (clearance_proportion * log(clearance_proportion)))
+        entropy <- - (death_proportion * safe_log(death_proportion) + 
+                      clearance_proportion * safe_log(clearance_proportion))
       }
   } else {
-      # General case (persist_proportion is not 0)
-      entropy <- - (death_proportion * log(death_proportion) + 
-                    clearance_proportion * log(clearance_proportion) +
-                    persist_proportion * log(persist_proportion))
+      entropy <- - (death_proportion * safe_log(death_proportion) + 
+                    clearance_proportion * safe_log(clearance_proportion) +
+                    persist_proportion * safe_log(persist_proportion))
   }
   
+  
   pd_cd_results_mid3$Entropy[temp_idx] <- entropy
+  
+  # Check for crossing 50% threshold (only ONCE per temperature increase)
+  if (proportion_deaths >= 0.5 && is.na(pd_cd_results_mid3$Crossing_Temperature[temp_idx])) { # Check if it crosses 50% AND if we haven't recorded it already
+    pd_cd_results_mid3$Crossing_Temperature[temp_idx] <- temp # Store the temperature at which it crossed 50%
+  }
+  crossing_temp_mid3 <- pd_cd_results_mid3$Crossing_Temperature[!is.na(pd_cd_results_mid3$Crossing_Temperature)][1]  
+  
   
   # Calculate Coefficient of Variation (Only if enough clearances, setting min threshold)
   clearance_days_finite <- clearance_days[!is.na(clearance_days)]
@@ -1236,15 +1381,16 @@ for (temp_idx in seq_along(temperatures)) {
 #### Null Mismatch: 
 ```{r, warning=FALSE}
 # Data frame to store both metrics for mid1 mismatch
-pd_cd_results_null <- data.frame(Temperature = temperatures, 
+pd_cd_results_null <- data.frame(Temperature = temperatures_smaller, 
                                  Proportion_Deaths = NA, 
                                  Entropy = NA, 
                                  Coef_Variation = NA,
-                                 Prop_Death_CoefVar = NA)
+                                 Prop_Death_CoefVar = NA,
+                                 Crossing_Temperature = NA)
 
 # Loop through each temperature
-for (temp_idx in seq_along(temperatures)) {
-  temp <- temperatures[temp_idx]
+for (temp_idx in seq_along(temperatures_smaller)) {
+  temp <- temperatures_smaller[temp_idx]
   
   # Temp-specific parameters
   phi_null <- estimate_phi(temp, q_phi, tmin_phi_null, tmax_phi_null)
@@ -1295,23 +1441,33 @@ for (temp_idx in seq_along(temperatures)) {
   
   entropy <- 0  # Initialize
   
+  # Avoid log(0) issues
+  safe_log <- function(x) ifelse(x >= 0.001, log(x), 0)
+
   # Calculate entropy 
-  if (persist_proportion == 0) {
-      # Handle the case where persist_proportion is 0
-      if (death_proportion == 0 || clearance_proportion == 0) {
-        entropy <- 0 # Entropy is 0 if all outcomes are the same (all death or all clearance)
+  if (persist_proportion <= 0.01) {
+      if (death_proportion <= 0.01 || clearance_proportion <= 0.01) {
+        entropy <- 0 # Entropy is 0 if all outcomes are the same
       } else {
-        entropy <- - (death_proportion * log(death_proportion) + (clearance_proportion * log(clearance_proportion)))
+        entropy <- - (death_proportion * safe_log(death_proportion) + 
+                      clearance_proportion * safe_log(clearance_proportion))
       }
   } else {
-      # General case (persist_proportion is not 0)
-      entropy <- - (death_proportion * log(death_proportion) + 
-                    clearance_proportion * log(clearance_proportion) +
-                    persist_proportion * log(persist_proportion))
+      entropy <- - (death_proportion * safe_log(death_proportion) + 
+                    clearance_proportion * safe_log(clearance_proportion) +
+                    persist_proportion * safe_log(persist_proportion))
   }
   
-  pd_cd_results_null$Entropy[temp_idx] <- entropy
   
+  pd_cd_results_null$Entropy[temp_idx] <- entropy
+   
+  # Check for crossing 50% threshold (only ONCE per temperature increase)
+  if (proportion_deaths >= 0.5 && is.na(pd_cd_results_null$Crossing_Temperature[temp_idx])) { # Check if it crosses 50% AND if we haven't recorded it already
+    pd_cd_results_null$Crossing_Temperature[temp_idx] <- temp # Store the temperature at which it crossed 50%
+  }
+  crossing_temp_null <- pd_cd_results_null$Crossing_Temperature[!is.na(pd_cd_results_null$Crossing_Temperature)][1]  
+  
+ 
   # Calculate Coefficient of Variation (Only if enough clearances, setting min threshold)
   clearance_days_finite <- clearance_days[!is.na(clearance_days)]
   min_survivors <- 10 
@@ -1350,28 +1506,40 @@ for (temp_idx in seq_along(temperatures)) {
 ```
 
 #### Plot the proportion of death at each scenario
-```{r, fig.height=10, fig.width=6}
+```{r, fig.height=10, fig.width=6, warning=FALSE}
 # Combine results to one data.frame
 death_data <- data.frame(
-  Temperature = rep(temperatures, times = 5),
+  Temperature = rep(temperatures_smaller, times = 5),
   Proportion_Deaths = c(pd_cd_results_high$Proportion_Deaths,
                         pd_cd_results_mid1$Proportion_Deaths,
                         pd_cd_results_mid2$Proportion_Deaths,
                         pd_cd_results_mid3$Proportion_Deaths,
                         pd_cd_results_null$Proportion_Deaths),
-  Scenario = rep(c("High Mismatch", "Mid 1 Mismatch", "Mid 2 Mismatch", "Mid 3 Mismatch", "No Mismatch"), each = length(temperatures))
+  Scenario = rep(c("High Mismatch", "Mid 1 Mismatch", 
+                   "Mid 2 Mismatch", "Mid 3 Mismatch", "No Mismatch"), 
+                 each = length(temperatures_smaller)),
+  Crossing_Temperature = c(rep(crossing_temp_high, length(temperatures_smaller)),
+                           rep(crossing_temp_mid1, length(temperatures_smaller)),
+                           rep(crossing_temp_mid2, length(temperatures_smaller)),
+                           rep(crossing_temp_mid3, length(temperatures_smaller)),
+                           rep(crossing_temp_null, length(temperatures_smaller)))
+
 )
 
 death_data$Legend_Label <- "Proportion of Deaths"
 
 # Create the plot
-death_plot <- ggplot(death_data, aes(x = Temperature, y = Proportion_Deaths, color = Legend_Label)) + 
+death_plot <- ggplot(death_data, aes(x = Temperature, y = Proportion_Deaths, color = Legend_Label)) +
   geom_line(linewidth = 1) +
-  facet_wrap(~ Scenario, ncol = 1) + 
-  scale_color_manual(values = c("Proportion of Deaths" = "red")) +
-  theme_bw() + 
+  geom_hline(yintercept = 0.5, linetype = "dashed", color = "black", linewidth = 0.8) +
+  geom_blank(aes(y = 0.5, color = "50% of Simulations Die")) + # Dummy geom
+  scale_color_manual(values = c("Proportion of Deaths" = "red", "50% of Simulations Die" = "black")) +
+  facet_wrap(~ Scenario, ncol = 1) +
+  geom_vline(aes(xintercept = Crossing_Temperature), data = death_data, 
+             linetype = "dashed", color = "black", linewidth = 0.8) + 
+  theme_bw() +
   labs(x = "Temperature (°C)", y = "Proportion of Deaths",
-       color = NULL, title = "C. Deaths Across Thermal Gradient") + 
+       color = NULL, title = "C. Deaths Across Thermal Gradient") +
   theme(strip.text = element_text(size = 15),
         legend.position = "bottom",
         plot.title = element_text(hjust = 0.5, size = 18, face = "bold"),
@@ -1387,16 +1555,23 @@ death_plot
 
 
 # Plot the ENTROPY for each thermal mismatch scenario
-```{r, fig.height=10, fig.width = 6}
+```{r, fig.height=10, fig.width = 6, warning=FALSE}
 # data frame for all results and easier ggplotting
 ent_data <- data.frame(
-  Temperature = rep(temperatures, times = 5),
+  Temperature = rep(temperatures_smaller, times = 5),
   Entropy = c(pd_cd_results_high$Entropy,
                      pd_cd_results_mid1$Entropy,
                      pd_cd_results_mid2$Entropy,
                      pd_cd_results_mid3$Entropy,
                      pd_cd_results_null$Entropy),
-  Scenario = rep(c("High Mismatch", "Mid 1 Mismatch", "Mid 2 Mismatch", "Mid 3 Mismatch", "No Mismatch"), each = length(temperatures))
+  Scenario = rep(c("High Mismatch", "Mid 1 Mismatch", "Mid 2 Mismatch", 
+                   "Mid 3 Mismatch", "No Mismatch"), 
+                 each = length(temperatures_smaller)),
+  Crossing_Temperature = c(rep(crossing_temp_high, length(temperatures_smaller)),
+                           rep(crossing_temp_mid1, length(temperatures_smaller)),
+                           rep(crossing_temp_mid2, length(temperatures_smaller)),
+                           rep(crossing_temp_mid3, length(temperatures_smaller)),
+                           rep(crossing_temp_null, length(temperatures_smaller)))
 )
 
 ent_data$Legend_Label <- "Entropy"
@@ -1405,9 +1580,12 @@ ent_data$Legend_Label <- "Entropy"
 ent_plot <- ggplot(ent_data, aes(x = Temperature, y = Entropy, color = Legend_Label)) +
   geom_line(linewidth = 1) + 
   facet_wrap(~ Scenario, ncol = 1) + 
-  scale_color_manual(values = c("Entropy" = "blue")) + 
-    theme_bw() + 
-  labs(x = "Temperature (°C)", y = "Entropy",
+  geom_blank(aes(y = 0.5, color = "50% of Simulations Die")) + # Dummy geom
+  scale_color_manual(values = c("Entropy" = "blue", "50% of Simulations Die" = "black")) +
+  geom_vline(aes(xintercept = Crossing_Temperature), data = ent_data, 
+             linetype = "dashed", color = "black", linewidth = 0.8) + 
+  theme_bw() + 
+  labs(x = "Temperature (°C)", y = "Entropy (nats)",
        color = NULL, title = "D. Outcome Variability (Entropy)") + 
   theme(strip.text = element_text(size = 15),
         legend.position = "bottom",
@@ -1428,13 +1606,13 @@ First, for the Coefficient of variation for the clearance days:
 ```{r, fig.height=8, fig.width=6}
 # Data frame for CV results
 cv_data <- data.frame(
-  Temperature = rep(temperatures, times = 5),
+  Temperature = rep(temperatures_smaller, times = 5),
   Coef_Variation = c(pd_cd_results_high$Coef_Variation,
                      pd_cd_results_mid1$Coef_Variation,
                      pd_cd_results_mid2$Coef_Variation,
                      pd_cd_results_mid3$Coef_Variation,
                      pd_cd_results_null$Coef_Variation),
-  Scenario = rep(c("High Mismatch", "Mid 1 Mismatch", "Mid 2 Mismatch", "Mid 3 Mismatch", "No Mismatch"), each = length(temperatures))
+  Scenario = rep(c("High Mismatch", "Mid 1 Mismatch", "Mid 2 Mismatch", "Mid 3 Mismatch", "No Mismatch"), each = length(temperatures_smaller))
 )
 
 cv_data$Legend_Label <- "Coefficient of Variation"
@@ -1461,13 +1639,13 @@ Now for Coefficient of Variation for Proportion of deaths:
 ```{r, fig.height=8, fig.width=6, warning=FALSE}
 # Data frame for CV results
 prop_death_cv_data <- data.frame(
-  Temperature = rep(temperatures, times = 5),
+  Temperature = rep(temperatures_smaller, times = 5),
   Prop_Death_CoefVar = c(pd_cd_results_high$Prop_Death_CoefVar,
                      pd_cd_results_mid1$Prop_Death_CoefVar,
                      pd_cd_results_mid2$Prop_Death_CoefVar,
                      pd_cd_results_mid3$Prop_Death_CoefVar,
                      pd_cd_results_null$Prop_Death_CoefVar),
-  Scenario = rep(c("High Mismatch", "Mid 1 Mismatch", "Mid 2 Mismatch", "Mid 3 Mismatch", "No Mismatch"), each = length(temperatures))
+  Scenario = rep(c("High Mismatch", "Mid 1 Mismatch", "Mid 2 Mismatch", "Mid 3 Mismatch", "No Mismatch"), each = length(temperatures_smaller))
 )
 
 prop_death_cv_data$Legend_Label <- "Coefficient of Variation"
@@ -1490,11 +1668,7 @@ prop_death_cv_plot <- ggplot(prop_death_cv_data, aes(x = Temperature, y = Prop_D
 prop_death_cv_plot
 ```
 
-#### Plot Variability in Prop Death next to Prop Death: 
-```{r, fig.height=10, fig.width=10, warning=FALSE}
-death_data_combine <- grid.arrange(death_plot, prop_death_cv_plot, ncol = 2)
-invisible(death_data_combine)
-```
+
 
 # Display all plots side by side: 
 ```{r}
@@ -1504,7 +1678,7 @@ p3 <- death_plot
 p4 <- ent_plot
 
 # setting widths
-widths <- c(0.75, 1.5, 0.75, 0.75)
+widths <- c(0.75, 1.6, 0.8, 0.8)
 total_width <- sum(widths)
 prop1 <- widths[1] / total_width
 prop2 <- (widths[1] + widths[2]) / total_width
@@ -1517,7 +1691,7 @@ all_plots_individual_sims <- gridExtra::grid.arrange(
   p1, p2, p3, p4,
   ncol = 4,
   widths = widths, 
-  padding = unit(1.5, "cm")
+  padding = unit(2, "cm")
 )
 
 grid.lines(x = c(prop1, prop1), y = c(0, 1),
@@ -1528,29 +1702,29 @@ grid.lines(x = c(prop3, prop3), y = c(0, 1),
            gp = gpar(col = "black", lwd = 2))
 invisible(all_plots_individual_sims)
 
-#ggsave("Figures/FullFigure.pdf", plot = all_plots_individual_sims, 
-#       device = "pdf", width = 25, height = 15)
+ggsave("Figures/FullFigure.pdf", plot = all_plots_individual_sims, 
+       device = "pdf", width = 25, height = 15)
 ```
 
 
-# Plot for Heatmap of Model Outcomes with different values of Phi and Alpha
+# Plot for Heatmap of the Entropy of Model Outcomes with different values of Phi and Alpha
 
 This chunk takes a while to run, 25 x 25 parameter combinations with 100 simulations each....
 ```{r, warning = FALSE}
-# Define synthetic range for phi and alpha\
-phi_vals_hm <- seq(2.05, 2.35, length.out = 25)
-alpha_vals_hm <- seq(1.85, 2.05, length.out = 25)
+# Define synthetic range for phi and alpha
+phi_vals_hm <- seq(2.5, 3.15, length.out = 25)
+alpha_vals_hm <- seq(2.5, 3.15, length.out = 25)
 
 # Dataframe for grid results
 death_prop_grid <- expand.grid(phi = phi_vals_hm, alpha = alpha_vals_hm)
-death_prop_grid$Proportion_Deaths <- NA
+death_prop_grid$Entropy <- NA
 
 # Model run looping through all param combinations
 for (i in seq_len(nrow(death_prop_grid))) {
   phi <- death_prop_grid$phi[i]
   alpha <- death_prop_grid$alpha[i]
   
-  #Set all params
+  # Set all params
   params <- list(
     phi = phi,
     alpha = alpha, 
@@ -1561,8 +1735,10 @@ for (i in seq_len(nrow(death_prop_grid))) {
     z_scalar = z_scalar
   )
   
-  death_count_hm <- 0
-  for(sim in 1:num_sims){
+  death_count <- 0
+  clearance_days <- numeric(num_sims) 
+  
+  for(sim in 1:num_sims) {
     hm_sim_results <- model_simulation(
       V_vec = V_vec,
       Z_vec = Z_vec, 
@@ -1571,32 +1747,91 @@ for (i in seq_len(nrow(death_prop_grid))) {
       clearance_threshold = clearance_threshold
     )
     
-    if(max(hm_sim_results$V_vec, na.rm = TRUE) >= death_threshold){
-      death_count_hm <- death_count_hm + 1
+    # Check for death
+    if (max(hm_sim_results$V_vec, na.rm = TRUE) >= death_threshold) {
+      death_count <- death_count + 1
+      clearance_days[sim] <- NA
+    } else {
+      clearance_day <- which(hm_sim_results$V_vec == 0)[1]
+      clearance_days[sim] <- ifelse(length(clearance_day) > 0, clearance_day, NA)
     }
   }
   
-  death_prop_grid$Proportion_Deaths[i] <- death_count_hm / num_sims
+  # Compute proportions
+  clearance_count <- sum(!is.na(clearance_days))
+  death_proportion <- round(death_count / num_sims, 5)
+  clearance_proportion <- round(clearance_count / num_sims, 5)
+  persist_proportion <- round(1 - death_proportion - clearance_proportion, 5)
+  
+  # Initialize entropy
+  entropy <- 0  
+
+
+  # Avoid log(0) issues
+  safe_log <- function(x) ifelse(x >= 0.001, log(x), 0)
+
+  # Calculate entropy 
+  if (persist_proportion <= 0.01) {
+      if (death_proportion <= 0.01 || clearance_proportion <= 0.01) {
+        entropy <- 0 # Entropy is 0 if all outcomes are the same
+      } else {
+        entropy <- - (death_proportion * safe_log(death_proportion) + 
+                      clearance_proportion * safe_log(clearance_proportion))
+      }
+  } else {
+      entropy <- - (death_proportion * safe_log(death_proportion) + 
+                    clearance_proportion * safe_log(clearance_proportion) +
+                    persist_proportion * safe_log(persist_proportion))
+  }
+  
+  # Store entropy
+  death_prop_grid$Entropy[i] <- entropy
 }
 ```
 
 #### Plot (Heatmap with geom_tile)
-```{r, warning=FALSE, fig.height=8, fig.width=8}
-phi_alpha_range_plot <- ggplot(death_prop_grid, 
-                               aes(x = phi, y = alpha, fill = Proportion_Deaths)) +
-  geom_tile() + 
-  scale_fill_viridis_c(option = "viridis", limits = c(0,1), direction = -1) + 
-  theme_bw() + 
-  labs(title = "Outcomes across a Range of Parameter Values",
-       x = "Phi Parameter Range",
-       y = "Alpha Parameter Range", 
-       fill = "Proportion Deaths") + 
+```{r, warning=FALSE, fig.height=7, fig.width=8}
+# Create a separate data frame for the heatmap
+heatmap_data <- death_prop_grid[, c("phi", "alpha", "Entropy")]
+
+# ensure the correct ordering: 
+all_param_values <- all_param_values %>%
+  arrange(Scenario, Temperature)
+
+phi_alpha_range_plot <- ggplot(heatmap_data, aes(x = phi, y = alpha, fill = Entropy)) +
+  geom_tile() +
+  scale_fill_viridis_c(option = "viridis", direction = -1) +
+  theme_bw() +
+  labs(title = "Outcome Variability across a Range of Parameter Values",
+       x = expression(paste("Viral Replication Rate (", phi, ") Range")),
+       y = expression(paste("Mass-Action Attack Rate ( ", alpha, ") Range")),
+       fill = "Entropy") +
   theme(plot.title = element_text(size = 16, hjust = 0.5, face = "bold"),
         axis.title = element_text(size = 14),
         axis.text = element_text(size = 12),
-        legend.position = "right", 
+        legend.position = "right",
         legend.title = element_text(size = 14),
-        legend.text = element_text(size = 14))
+        legend.text = element_text(size = 14)) +
+
+  # Add points and lines with custom colors (and NO inherited aesthetics)
+  geom_point(data = all_param_values, aes(x = Phi, y = Alpha, color = Scenario, 
+                                          shape = Scenario), size = 5, inherit.aes = FALSE) +
+  geom_path(data = all_param_values, aes(x = Phi, y = Alpha, color = Scenario, group = Scenario), 
+            linewidth = 1, alpha = 1, inherit.aes = FALSE)+
+  scale_color_manual(values = c(
+    "High Mismatch" = "black",  
+    "Mid 1 Mismatch" = "navyblue",  
+    "Mid 2 Mismatch" = "red", 
+    "Mid 3 Mismatch" = "magenta", 
+    "No Mismatch" = "orange"   
+  )) +
+  scale_shape_manual(values = c(
+  "High Mismatch" = 16, 
+  "Mid 1 Mismatch" = 17,  
+  "Mid 2 Mismatch" = 15, 
+  "Mid 3 Mismatch" = 18,  
+  "No Mismatch" = 19  
+))
 
 phi_alpha_range_plot
 
@@ -1604,27 +1839,27 @@ phi_alpha_range_plot
 #       device = "pdf", width = 8, height = 8)
 ```
 
-# Plot for Heatmap of Model Outcomes with different values of Phi and Psi
+# Plot for Heatmap of Entropy of Model Outcomes with different values of Phi and Psi
 
 This chunk takes a while to run, 25 x 25 parameter combinations with 100 simulations each....
 ```{r, warning = FALSE}
-# Define synthetic range for phi and psi\
-phi_vals_hm <- seq(2.2, 2.6, length.out = 25)
-psi_vals_hm <- seq(0.95, 1.2, length.out = 25)
+# Define synthetic range for phi and alpha
+phi_vals_hm <- seq(2.25, 2.65, length.out = 25)
+psi_vals_hm <- seq(0.9, 1.15, length.out = 25)
 
 # Dataframe for grid results
 death_prop_grid2 <- expand.grid(phi = phi_vals_hm, psi = psi_vals_hm)
-death_prop_grid2$Proportion_Deaths <- NA
+death_prop_grid2$Entropy <- NA
 
 # Model run looping through all param combinations
 for (i in seq_len(nrow(death_prop_grid2))) {
   phi <- death_prop_grid2$phi[i]
   psi <- death_prop_grid2$psi[i]
   
-  #Set all params
+  # Set all params
   params <- list(
     phi = phi,
-    alpha = 1.75, 
+    alpha = 1.9, 
     delta = 1.29,
     psi = psi,
     gamma = 0.13,
@@ -1632,8 +1867,10 @@ for (i in seq_len(nrow(death_prop_grid2))) {
     z_scalar = z_scalar
   )
   
-  death_count_hm <- 0
-  for(sim in 1:num_sims){
+  death_count <- 0
+  clearance_days <- numeric(num_sims) 
+  
+  for(sim in 1:num_sims) {
     hm_sim_results <- model_simulation(
       V_vec = V_vec,
       Z_vec = Z_vec, 
@@ -1642,26 +1879,59 @@ for (i in seq_len(nrow(death_prop_grid2))) {
       clearance_threshold = clearance_threshold
     )
     
-    if(max(hm_sim_results$V_vec, na.rm = TRUE) >= death_threshold){
-      death_count_hm <- death_count_hm + 1
+    # Check for death
+    if (max(hm_sim_results$V_vec, na.rm = TRUE) >= death_threshold) {
+      death_count <- death_count + 1
+      clearance_days[sim] <- NA
+    } else {
+      clearance_day <- which(hm_sim_results$V_vec == 0)[1]
+      clearance_days[sim] <- ifelse(length(clearance_day) > 0, clearance_day, NA)
     }
   }
   
-  death_prop_grid2$Proportion_Deaths[i] <- death_count_hm / num_sims
+  # Compute proportions
+  clearance_count <- sum(!is.na(clearance_days))
+  death_proportion <- round(death_count / num_sims, 5)
+  clearance_proportion <- round(clearance_count / num_sims, 5)
+  persist_proportion <- round(1 - death_proportion - clearance_proportion, 5)
+  
+  # Initialize entropy
+  entropy <- 0  
+
+
+  # Avoid log(0) issues
+  safe_log <- function(x) ifelse(x >= 0.001, log(x), 0)
+
+  # Calculate entropy 
+  if (persist_proportion <= 0.01) {
+      if (death_proportion <= 0.01 || clearance_proportion <= 0.01) {
+        entropy <- 0 # Entropy is 0 if all outcomes are the same
+      } else {
+        entropy <- - (death_proportion * safe_log(death_proportion) + 
+                      clearance_proportion * safe_log(clearance_proportion))
+      }
+  } else {
+      entropy <- - (death_proportion * safe_log(death_proportion) + 
+                    clearance_proportion * safe_log(clearance_proportion) +
+                    persist_proportion * safe_log(persist_proportion))
+  }
+  
+  # Store entropy
+  death_prop_grid2$Entropy[i] <- entropy
 }
 ```
 
 #### Plot (Heatmap with geom_tile)
-```{r, warning=FALSE, fig.height=8, fig.width=8}
+```{r, warning=FALSE, fig.height=7, fig.width=7}
 phi_psi_range_plot <- ggplot(death_prop_grid2, 
-                               aes(x = phi, y = psi, fill = Proportion_Deaths)) +
+                               aes(x = phi, y = psi, fill = Entropy)) +
   geom_tile() + 
-  scale_fill_viridis_c(option = "mako", limits = c(0,1), direction = -1) + 
+  scale_fill_viridis_c(option = "mako", direction = -1) + 
   theme_bw() + 
-  labs(title = "Outcomes across a Range of Parameter Values",
-       x = "Phi Parameter Range",
-       y = "Psi Parameter Range", 
-       fill = "Proportion Deaths") + 
+  labs(title = "Outcome Variability across a Range of Parameter Values",
+       x = expression(paste("Viral Replication Rate (", Phi, ") Range")),  
+       y = expression(paste("Immune Response Growth Rate (", psi, ") Range")), 
+       fill = "Entropy") + 
   theme(plot.title = element_text(size = 16, hjust = 0.5, face = "bold"),
         axis.title = element_text(size = 14),
         axis.text = element_text(size = 12),
