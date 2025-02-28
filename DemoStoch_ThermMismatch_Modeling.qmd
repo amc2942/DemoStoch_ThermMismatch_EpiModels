@@ -880,7 +880,9 @@ pd_cd_results_high <- data.frame(Temperature = temperatures_smaller,
                                  Entropy = NA, 
                                  Coef_Variation = NA,
                                  Prop_Death_CoefVar = NA,
-                                 Crossing_Temperature = NA)
+                                 Crossing_Temperature = NA,
+                                 Phi = NA,
+                                 Alpha = NA)
 
 # Loop through each temperature
 for (temp_idx in seq_along(temperatures_smaller)) {
@@ -889,6 +891,9 @@ for (temp_idx in seq_along(temperatures_smaller)) {
   # Temp-specific parameters
   phi_high <- estimate_phi(temp, q_phi, tmin_phi_high, tmax_phi_high)
   alpha_high <- estimate_alpha(temp, q_phi, tmin_alpha_high, tmax_alpha_high)
+  
+  pd_cd_results_high$Phi[temp_idx] <- phi_high
+  pd_cd_results_high$Alpha[temp_idx] <- alpha_high
   
   # All parameters
   params_high <- list(
@@ -1008,7 +1013,9 @@ pd_cd_results_mid1 <- data.frame(Temperature = temperatures_smaller,
                                  Entropy = NA, 
                                  Coef_Variation = NA,
                                  Prop_Death_CoefVar = NA,
-                                 Crossing_Temperature = NA)
+                                 Crossing_Temperature = NA,
+                                 Phi = NA,
+                                 Alpha = NA)
 
 # Loop through each temperature
 for (temp_idx in seq_along(temperatures_smaller)) {
@@ -1017,6 +1024,9 @@ for (temp_idx in seq_along(temperatures_smaller)) {
   # Temp-specific parameters
   phi_mid1 <- estimate_phi(temp, q_phi, tmin_phi_mid1, tmax_phi_mid1)
   alpha_mid1 <- estimate_alpha(temp, q_phi, tmin_alpha_mid1, tmax_alpha_mid1)
+  
+  pd_cd_results_mid1$Phi[temp_idx] <- phi_mid1
+  pd_cd_results_mid1$Alpha[temp_idx] <- alpha_mid1
   
   # All parameters
   params_mid1 <- list(
@@ -1134,7 +1144,9 @@ pd_cd_results_mid2 <- data.frame(Temperature = temperatures_smaller,
                                  Entropy = NA, 
                                  Coef_Variation = NA,
                                  Prop_Death_CoefVar = NA,
-                                 Crossing_Temperature = NA)
+                                 Crossing_Temperature = NA,
+                                 Phi = NA,
+                                 Alpha = NA)
 
 # Loop through each temperature
 for (temp_idx in seq_along(temperatures_smaller)) {
@@ -1143,6 +1155,9 @@ for (temp_idx in seq_along(temperatures_smaller)) {
   # Temp-specific parameters
   phi_mid2 <- estimate_phi(temp, q_phi, tmin_phi_mid2, tmax_phi_mid2)
   alpha_mid2 <- estimate_alpha(temp, q_phi, tmin_alpha_mid2, tmax_alpha_mid2)
+  
+  pd_cd_results_mid2$Phi[temp_idx] <- phi_mid2
+  pd_cd_results_mid2$Alpha[temp_idx] <- alpha_mid2
   
   # All parameters
   params_mid2 <- list(
@@ -1259,7 +1274,9 @@ pd_cd_results_mid3 <- data.frame(Temperature = temperatures_smaller,
                                  Entropy = NA, 
                                  Coef_Variation = NA,
                                  Prop_Death_CoefVar = NA,
-                                 Crossing_Temperature = NA)
+                                 Crossing_Temperature = NA,
+                                 Phi = NA,
+                                 Alpha = NA)
 
 # Loop through each temperature
 for (temp_idx in seq_along(temperatures_smaller)) {
@@ -1268,6 +1285,9 @@ for (temp_idx in seq_along(temperatures_smaller)) {
   # Temp-specific parameters
   phi_mid3 <- estimate_phi(temp, q_phi, tmin_phi_mid3, tmax_phi_mid3)
   alpha_mid3 <- estimate_alpha(temp, q_phi, tmin_alpha_mid3, tmax_alpha_mid3)
+  
+  pd_cd_results_mid3$Phi[temp_idx] <- phi_mid3
+  pd_cd_results_mid3$Alpha[temp_idx] <- alpha_mid3
   
   # All parameters
   params_mid3 <- list(
@@ -1386,7 +1406,9 @@ pd_cd_results_null <- data.frame(Temperature = temperatures_smaller,
                                  Entropy = NA, 
                                  Coef_Variation = NA,
                                  Prop_Death_CoefVar = NA,
-                                 Crossing_Temperature = NA)
+                                 Crossing_Temperature = NA,
+                                 Phi = NA,
+                                 Alpha = NA)
 
 # Loop through each temperature
 for (temp_idx in seq_along(temperatures_smaller)) {
@@ -1395,6 +1417,9 @@ for (temp_idx in seq_along(temperatures_smaller)) {
   # Temp-specific parameters
   phi_null <- estimate_phi(temp, q_phi, tmin_phi_null, tmax_phi_null)
   alpha_null <- estimate_alpha(temp, q_phi, tmin_alpha_null, tmax_alpha_null)
+  
+  pd_cd_results_null$Phi[temp_idx] <- phi_null
+  pd_cd_results_null$Alpha[temp_idx] <- alpha_null
   
   # All parameters
   params_null <- list(
@@ -1505,6 +1530,16 @@ for (temp_idx in seq_along(temperatures_smaller)) {
 
 ```
 
+add scenario column to each dataframe: 
+```{r}
+# Add Scenario column to each data frame and combine
+pd_cd_results_high$Scenario <- "High Mismatch"
+pd_cd_results_mid1$Scenario <- "Mid 1 Mismatch"
+pd_cd_results_mid2$Scenario <- "Mid 2 Mismatch"
+pd_cd_results_mid3$Scenario <- "Mid 3 Mismatch"
+pd_cd_results_null$Scenario <- "No Mismatch"
+```
+
 #### Plot the proportion of death at each scenario
 ```{r, fig.height=10, fig.width=6, warning=FALSE}
 # Combine results to one data.frame
@@ -1596,8 +1631,8 @@ ent_plot <- ggplot(ent_data, aes(x = Temperature, y = Entropy, color = Legend_La
 
 ent_plot
 
-ggsave("Figures/Entropy.pdf", plot = ent_plot,
-       device = "pdf", width = 6, height = 10)
+#ggsave("Figures/Entropy.pdf", plot = ent_plot,
+ #      device = "pdf", width = 6, height = 10)
 ```
 
 #### Plots for coefficient of variation:
@@ -1702,8 +1737,8 @@ grid.lines(x = c(prop3, prop3), y = c(0, 1),
            gp = gpar(col = "black", lwd = 2))
 invisible(all_plots_individual_sims)
 
-ggsave("Figures/FullFigure.pdf", plot = all_plots_individual_sims, 
-       device = "pdf", width = 25, height = 15)
+#ggsave("Figures/FullFigure.pdf", plot = all_plots_individual_sims, 
+ #      device = "pdf", width = 25, height = 15)
 ```
 
 
@@ -1790,13 +1825,28 @@ for (i in seq_len(nrow(death_prop_grid))) {
 ```
 
 #### Plot (Heatmap with geom_tile)
-```{r, warning=FALSE, fig.height=7, fig.width=8}
+```{r, warning=FALSE, fig.height=7, fig.width=10}
+
+# ensure the correct ordering:
+# NOTE: this is the param values at 9.5, 12.5, 15.5:
+all_param_values <- all_param_values %>%
+  arrange(Scenario, Temperature) %>% 
+  filter(Scenario %in% c("High Mismatch", "Mid 2 Mismatch", "No Mismatch"))
+
+all_param_gradient <- rbind(
+  pd_cd_results_high,
+  pd_cd_results_mid1,
+  pd_cd_results_mid2,
+  pd_cd_results_mid3,
+  pd_cd_results_null
+)
+
+all_param_gradient <- all_param_gradient %>% 
+  arrange(Scenario, Temperature) %>% 
+  filter(Scenario %in% c("High Mismatch", "Mid 1 Mismatch", "Mid 2 Mismatch", "Mid 3 Mismatch", "No Mismatch"))
+
 # Create a separate data frame for the heatmap
 heatmap_data <- death_prop_grid[, c("phi", "alpha", "Entropy")]
-
-# ensure the correct ordering: 
-all_param_values <- all_param_values %>%
-  arrange(Scenario, Temperature)
 
 phi_alpha_range_plot <- ggplot(heatmap_data, aes(x = phi, y = alpha, fill = Entropy)) +
   geom_tile() +
@@ -1806,37 +1856,28 @@ phi_alpha_range_plot <- ggplot(heatmap_data, aes(x = phi, y = alpha, fill = Entr
        x = expression(paste("Viral Replication Rate (", phi, ") Range")),
        y = expression(paste("Mass-Action Attack Rate ( ", alpha, ") Range")),
        fill = "Entropy") +
-  theme(plot.title = element_text(size = 16, hjust = 0.5, face = "bold"),
-        axis.title = element_text(size = 14),
+  theme(plot.title = element_text(size = 17, hjust = 0.5, face = "bold"),
+        axis.title = element_text(size = 15),
         axis.text = element_text(size = 12),
         legend.position = "right",
-        legend.title = element_text(size = 14),
-        legend.text = element_text(size = 14)) +
+        legend.title = element_text(size = 13, face = "bold"),
+        legend.text = element_text(size = 12)) +
 
-  # Add points and lines with custom colors (and NO inherited aesthetics)
-  geom_point(data = all_param_values, aes(x = Phi, y = Alpha, color = Scenario, 
-                                          shape = Scenario), size = 5, inherit.aes = FALSE) +
-  geom_path(data = all_param_values, aes(x = Phi, y = Alpha, color = Scenario, group = Scenario), 
-            linewidth = 1, alpha = 1, inherit.aes = FALSE)+
+  geom_path(data = all_param_gradient, aes(x = Phi, y = Alpha, color = Scenario),
+              se = FALSE, linewidth = 1.35, inherit.aes = FALSE) +
+  labs(color = "Parameter Values from 9°C-16°C") +
   scale_color_manual(values = c(
-    "High Mismatch" = "black",  
-    "Mid 1 Mismatch" = "navyblue",  
-    "Mid 2 Mismatch" = "red", 
-    "Mid 3 Mismatch" = "magenta", 
-    "No Mismatch" = "orange"   
-  )) +
-  scale_shape_manual(values = c(
-  "High Mismatch" = 16, 
-  "Mid 1 Mismatch" = 17,  
-  "Mid 2 Mismatch" = 15, 
-  "Mid 3 Mismatch" = 18,  
-  "No Mismatch" = 19  
-))
+    "High Mismatch" = "black",
+    "Mid 1 Mismatch" = "purple",
+    "Mid 2 Mismatch" = "brown",
+    "Mid 3 Mismatch" = "deeppink",
+    "No Mismatch" = "pink"
+  ))
 
 phi_alpha_range_plot
 
 #ggsave("Figures/phi_alpha_range_plot.pdf", plot = phi_alpha_range_plot,
-#       device = "pdf", width = 8, height = 8)
+#       device = "pdf", width = 10, height = 7)
 ```
 
 # Plot for Heatmap of Entropy of Model Outcomes with different values of Phi and Psi
