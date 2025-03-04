@@ -73,7 +73,7 @@ estimate_phi <- function(temperature, q_phi, tmin_phi, tmax_phi) {
 }
 
 # Set q for phi
-q_phi <- 0.01471
+q_phi <- 0.0135
 # Set temperature range
 tmin_phi <- 1
 tmax_phi <- 30
@@ -98,7 +98,7 @@ estimate_alpha <- function(temperature, q_alpha, tmin_alpha, tmax_alpha){
 }
 
 # Set q value for alpha 
-q_alpha <- 0.0117
+q_alpha <- 0.01375
 # Set temperature range
 tmin_alpha <- -5
 tmax_alpha <- 24
@@ -432,7 +432,7 @@ death_threshold <- 3000
 clearance_threshold <- 0
 
 # Set initial values
-V_vec[1] <- 250                      # Initial viral density 
+V_vec[1] <- 290                    # Initial viral density 
 Z_vec[1] <- rpois(1, 0.35*z_scalar)  # Initial immune component density 
 
 # Set number of iterations per scenario per temperature: 
@@ -506,6 +506,7 @@ for (temp in temp_checks) {
 
 #### Mid 1 Mismatch
 ```{r, warning=FALSE}
+set.seed(20)
 # Store results for mid 1 mismatch: 
 results_mid1 <- list()
 
@@ -1268,6 +1269,7 @@ for (temp_idx in seq_along(temperatures_smaller)) {
 
 #### Mid 3 Mismatch: 
 ```{r, warning=FALSE}
+set.seed(12)
 # Data frame to store both metrics for mid3 mismatch
 pd_cd_results_mid3 <- data.frame(Temperature = temperatures_smaller, 
                                  Proportion_Deaths = NA, 
@@ -1738,7 +1740,7 @@ grid.lines(x = c(prop3, prop3), y = c(0, 1),
 invisible(all_plots_individual_sims)
 
 #ggsave("Figures/FullFigure.pdf", plot = all_plots_individual_sims, 
- #      device = "pdf", width = 25, height = 15)
+#       device = "pdf", width = 25, height = 15)
 ```
 
 
