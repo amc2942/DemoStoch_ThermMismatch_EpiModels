@@ -1,5 +1,5 @@
 ---
-title: "Modeling Demographic Stochasticity and Thermal Mismatch in Host-Pathogen Wildlife Systems"
+title: "Supplemental_Analysis_WithinhostModeling"
 subtitle: "Modeling Code"
 author: "Andy Carlino"
 fig-align: center
@@ -47,18 +47,7 @@ source("model_simulation_function.R")
 ```
 
 
-# Quadratic Functions for Parameter Values along Thermal Gradient:
-
-Thermal Performance Curve using a Quadratic function: 
-$$ 
-\text{Parameter} = -q * [\text{temp} - t_{min}][\text{temp} - t_{max}]
-$$
-
-Min-Max Normalization to get all parameters on 0-1 scale for easier visualization
-$$
-\text{Normalized Parameter} = \frac{value - min}{max - min}
-$$
-
+# Quadratic Thermal Performance Curves
 ```{r}
 # Generate temperature range
 temperatures <- seq(4, 21, length.out = 50)
@@ -89,39 +78,36 @@ temp_peak_phi <- (tmin_phi + tmax_phi) / 2
 peak_phi <- estimate_phi(temp_peak_phi, q_phi, tmin_phi, tmax_phi)
 ```
 
-Estimating the Range of Parameter Alpha (Mass-action Attack Rate)
+Estimating the Range of Parameter Psi (Immune component growth rate in response to virus)
 ```{r}
-estimate_alpha <- function(temperature, q_alpha, tmin_alpha, tmax_alpha){
-  # Quadratic Equation
-  alpha <- pmax(-q_alpha * (temperature - tmin_alpha) * (temperature - tmax_alpha), 0)
-  return(alpha)
+estimate_psi <- function(temperature, q_psi, tmin_psi, tmax_psi) {
+  # Quadratic equation
+  psi <- pmax(-q_psi * (temperature - tmin_psi) * (temperature - tmax_psi), 0) 
+  return(psi)
 }
 
-# Set q value for alpha 
-q_alpha <- 0.01375
+# Set q for psi
+q_psi <- 0.00471
 # Set temperature range
-tmin_alpha <- -5
-tmax_alpha <- 24
+tmin_psi <- -5
+tmax_psi <- 24
 
-# Calculate corresponding values of alpha
-alpha_values <- estimate_alpha(temperatures, q_alpha, tmin_alpha, tmax_alpha)
+# Calculate corresponding values of psi
+psi_values <- estimate_psi(temperatures, q_psi, tmin_psi, tmax_psi)
 
-# Min-Max Normalization
-norm_alpha <- (alpha_values - min(alpha_values)) / (max(alpha_values) - min(alpha_values))
+# Min-Max normalization
+norm_psi <- (psi_values - min(psi_values)) / (max(psi_values) - min(psi_values))
 
-# Peak value of the alpha Parameter
-temp_peak_alpha <- (tmin_alpha + tmax_alpha) / 2
-peak_alpha <- estimate_alpha(temp_peak_alpha, q_alpha, tmin_alpha, tmax_alpha)
+# Peak value of the psi Parameter
+temp_peak_psi <- (tmin_psi + tmax_psi) / 2
+peak_psi <- estimate_psi(temp_peak_psi, q_psi, tmin_psi, tmax_psi)
 ```
-
-Estimating the range of other parameters can be easily achieved by copying the code and replacing with appropriate variable names.
 
 Plot the functions: 
 ```{r}
 plot_data <- data.frame(Temperature = temperatures,
-                        Phi = norm_phi, 
-                        Alpha = norm_alpha)
-                        #Psi = psi_values)
+                        Phi = norm_phi,
+                        Psi = norm_psi)
 
 # Plot Phi Values
 phi_plot <- ggplot(plot_data, aes(x = Temperature, y = Phi)) +
@@ -135,37 +121,35 @@ phi_plot <- ggplot(plot_data, aes(x = Temperature, y = Phi)) +
   theme(axis.text = element_text(size = 15)) + 
   theme(axis.title = element_text(size = 15))
 
-# Plot Alpha Values
-alpha_plot <- ggplot(plot_data, aes(x = Temperature, y = Alpha)) +
+# Plot Psi Values
+psi_plot <- ggplot(plot_data, aes(x = Temperature, y = Psi)) +
   geom_line(color = "blue") + 
-  labs(x = "Temperature (°C)", y = "Alpha (Host) Values") + 
-  geom_vline(xintercept = temp_peak_alpha, color = "blue", linetype = "dashed") +
+  labs(x = "Temperature (°C)", y = "Psi (Host) Values") + 
+  geom_vline(xintercept = temp_peak_psi, color = "blue", linetype = "dashed") +
   theme_bw() + 
   theme(axis.text = element_text(size = 15)) + 
   theme(axis.title = element_text(size = 15))
 
 
 # To plot both parameters together with normalized values: 
-plot_data_long <- plot_data %>% pivot_longer(cols = c(Phi, Alpha), names_to = "Parameter", values_to = "Value")
+plot_data_long <- plot_data %>% pivot_longer(cols = c(Phi, Psi), names_to = "Parameter", values_to = "Value")
 
 combined_plot <- ggplot(plot_data_long, aes(x = Temperature, y = Value, color = Parameter)) +
   geom_line() +
   geom_vline(xintercept = temp_peak_phi, color = "red", linetype = "dashed") + # For Phi peak
-  geom_vline(xintercept = temp_peak_alpha, color = "blue", linetype = "dashed") + # For Alpha peak
+  geom_vline(xintercept = temp_peak_psi, color = "blue", linetype = "dashed") + # For Psi peak
   labs(x = "Temperature (°C)", y = "Parameter Values") +
   theme_bw() +
   ggtitle("Temperature vs. Parameter Values") +
   theme(plot.title = element_text(hjust = 0.5, size = 20),
         axis.text = element_text(size = 15),
         axis.title = element_text(size = 15)) +
-  scale_color_manual(values = c("Phi" = "red", "Alpha" = "blue"))
+  scale_color_manual(values = c("Phi" = "red", "Psi" = "blue"))
 
 combined_plot
 ```
 
-
-## Testing Multiple Scenarios (High, Mid [multiple], Null)
-Using this format, we're going to create and test different scenarios, incrementally closing the gap between thermal optima (by bringing tmin/tmax closer for each step), ultimately testing a 'null' scenario where thermal optima completely overlap (i.e., no thermal mismatch). 
+# Generate Thermal Mismatch Scenarios
 
 #### High Mismatch
 ```{r}
@@ -185,22 +169,21 @@ temp_peak_phi_high <- (tmin_phi_high + tmax_phi_high) / 2
 peak_phi_high <- estimate_phi(temp_peak_phi_high, q_phi, tmin_phi_high, tmax_phi_high)
 
 # ------------------------------------------------
-# NEXT: Alpha value for High Mismatch
+# NEXT: Psi value for High Mismatch
 # Set temperature range
-tmin_alpha_high <- -5
-tmax_alpha_high <- 24
+tmin_psi_high <- -5
+tmax_psi_high <- 24
 
-# Calculate corresponding values of alpha
-alpha_values_high <- estimate_alpha(temperatures, q_alpha, tmin_alpha_high, tmax_alpha_high)
+# Calculate corresponding values of psi
+psi_values_high <- estimate_psi(temperatures, q_psi, tmin_psi_high, tmax_psi_high)
 
 # Min-Max Normalization
-norm_alpha_high <- (alpha_values_high - min(alpha_values_high)) / (max(alpha_values_high) - min(alpha_values_high))
+norm_psi_high <- (psi_values_high - min(psi_values_high)) / (max(psi_values_high) - min(psi_values_high))
 
-# Peak value of the alpha Parameter
-temp_peak_alpha_high <- (tmin_alpha_high + tmax_alpha_high) / 2
-peak_alpha_high <- estimate_alpha(temp_peak_alpha_high, q_alpha, tmin_alpha_high, tmax_alpha_high)
+# Peak value of the psi Parameter
+temp_peak_psi_high <- (tmin_psi_high + tmax_psi_high) / 2
+peak_psi_high <- estimate_psi(temp_peak_psi_high, q_psi, tmin_psi_high, tmax_psi_high)
 ```
-
 
 #### Mid 1 Mismatch
 ```{r}
@@ -220,20 +203,20 @@ temp_peak_phi_mid1 <- (tmin_phi_mid1 + tmax_phi_mid1) / 2
 peak_phi_mid1 <- estimate_phi(temp_peak_phi_mid1, q_phi, tmin_phi_mid1, tmax_phi_mid1)
 
 # ------------------------------------------------
-# NEXT: Alpha value for Mid 1 Mismatch
+# NEXT: Psi value for Mid 1 Mismatch
 # Set temperature range
-tmin_alpha_mid1 <- -4.25
-tmax_alpha_mid1 <- 24.75
+tmin_psi_mid1 <- -4.25
+tmax_psi_mid1 <- 24.75
 
-# Calculate corresponding values of alpha
-alpha_values_mid1 <- estimate_alpha(temperatures, q_alpha, tmin_alpha_mid1, tmax_alpha_mid1)
+# Calculate corresponding values of psi
+psi_values_mid1 <- estimate_psi(temperatures, q_psi, tmin_psi_mid1, tmax_psi_mid1)
 
 # Min-Max Normalization
-norm_alpha_mid1 <- (alpha_values_mid1 - min(alpha_values_mid1)) / (max(alpha_values_mid1) - min(alpha_values_mid1))
+norm_psi_mid1 <- (psi_values_mid1 - min(psi_values_mid1)) / (max(psi_values_mid1) - min(psi_values_mid1))
 
-# Peak value of the alpha Parameter
-temp_peak_alpha_mid1 <- (tmin_alpha_mid1 + tmax_alpha_mid1) / 2
-peak_alpha_mid1 <- estimate_alpha(temp_peak_alpha_mid1, q_alpha, tmin_alpha_mid1, tmax_alpha_mid1)
+# Peak value of the psi Parameter
+temp_peak_psi_mid1 <- (tmin_psi_mid1 + tmax_psi_mid1) / 2
+peak_psi_mid1 <- estimate_psi(temp_peak_psi_mid1, q_psi, tmin_psi_mid1, tmax_psi_mid1)
 ```
 
 #### Mid 2 Mismatch
@@ -254,20 +237,20 @@ temp_peak_phi_mid2 <- (tmin_phi_mid2 + tmax_phi_mid2) / 2
 peak_phi_mid2 <- estimate_phi(temp_peak_phi_mid2, q_phi, tmin_phi_mid2, tmax_phi_mid2)
 
 # ------------------------------------------------
-# NEXT: Alpha value for Mid 2 Mismatch
+# NEXT: psi value for Mid 2 Mismatch
 # Set temperature range
-tmin_alpha_mid2 <- -3.5
-tmax_alpha_mid2 <- 25.5
+tmin_psi_mid2 <- -3.5
+tmax_psi_mid2 <- 25.5
 
-# Calculate corresponding values of alpha
-alpha_values_mid2 <- estimate_alpha(temperatures, q_alpha, tmin_alpha_mid2, tmax_alpha_mid2)
+# Calculate corresponding values of psi
+psi_values_mid2 <- estimate_psi(temperatures, q_psi, tmin_psi_mid2, tmax_psi_mid2)
 
 # Min-Max Normalization
-norm_alpha_mid2 <- (alpha_values_mid2 - min(alpha_values_mid2)) / (max(alpha_values_mid2) - min(alpha_values_mid2))
+norm_psi_mid2 <- (psi_values_mid2 - min(psi_values_mid2)) / (max(psi_values_mid2) - min(psi_values_mid2))
 
-# Peak value of the alpha Parameter
-temp_peak_alpha_mid2 <- (tmin_alpha_mid2 + tmax_alpha_mid2) / 2
-peak_alpha_mid2 <- estimate_alpha(temp_peak_alpha_mid2, q_alpha, tmin_alpha_mid2, tmax_alpha_mid2)
+# Peak value of the psi Parameter
+temp_peak_psi_mid2 <- (tmin_psi_mid2 + tmax_psi_mid2) / 2
+peak_psi_mid2 <- estimate_psi(temp_peak_psi_mid2, q_psi, tmin_psi_mid2, tmax_psi_mid2)
 ```
 
 #### Mid 3 Mismatch
@@ -288,20 +271,20 @@ temp_peak_phi_mid3 <- (tmin_phi_mid3 + tmax_phi_mid3) / 2
 peak_phi_mid3 <- estimate_phi(temp_peak_phi_mid3, q_phi, tmin_phi_mid3, tmax_phi_mid3)
 
 # ------------------------------------------------
-# NEXT: Alpha value for Mid 3 Mismatch
+# NEXT: Psi value for Mid 3 Mismatch
 # Set temperature range
-tmin_alpha_mid3 <- -2.75
-tmax_alpha_mid3 <- 26.25
+tmin_psi_mid3 <- -2.75
+tmax_psi_mid3 <- 26.25
 
-# Calculate corresponding values of alpha
-alpha_values_mid3 <- estimate_alpha(temperatures, q_alpha, tmin_alpha_mid3, tmax_alpha_mid3)
+# Calculate corresponding values of psi
+psi_values_mid3 <- estimate_psi(temperatures, q_psi, tmin_psi_mid3, tmax_psi_mid3)
 
 # Min-Max Normalization
-norm_alpha_mid3 <- (alpha_values_mid3 - min(alpha_values_mid3)) / (max(alpha_values_mid3) - min(alpha_values_mid3))
+norm_psi_mid3 <- (psi_values_mid3 - min(psi_values_mid3)) / (max(psi_values_mid3) - min(psi_values_mid3))
 
-# Peak value of the alpha Parameter
-temp_peak_alpha_mid3 <- (tmin_alpha_mid3 + tmax_alpha_mid3) / 2
-peak_alpha_mid3 <- estimate_alpha(temp_peak_alpha_mid3, q_alpha, tmin_alpha_mid3, tmax_alpha_mid3)
+# Peak value of the psi Parameter
+temp_peak_psi_mid3 <- (tmin_psi_mid3 + tmax_psi_mid3) / 2
+peak_psi_mid3 <- estimate_psi(temp_peak_psi_mid3, q_psi, tmin_psi_mid3, tmax_psi_mid3)
 ```
 
 #### No Mismatch (i.e., Null Scenario)
@@ -322,20 +305,20 @@ temp_peak_phi_null <- (tmin_phi_null + tmax_phi_null) / 2
 peak_phi_null <- estimate_phi(temp_peak_phi_null, q_phi, tmin_phi_null, tmax_phi_null)
 
 # ------------------------------------------------
-# NEXT: Alpha value for No Mismatch
+# NEXT: Psi value for No Mismatch
 # Set temperature range
-tmin_alpha_null <- -2
-tmax_alpha_null <- 27
+tmin_psi_null <- -2
+tmax_psi_null <- 27
 
-# Calculate corresponding values of alpha
-alpha_values_null <- estimate_alpha(temperatures, q_alpha, tmin_alpha_null, tmax_alpha_null)
+# Calculate corresponding values of psi
+psi_values_null <- estimate_psi(temperatures, q_psi, tmin_psi_null, tmax_psi_null)
 
 # Min-Max Normalization
-norm_alpha_null <- (alpha_values_null - min(alpha_values_null)) / (max(alpha_values_null) - min(alpha_values_null))
+norm_psi_null <- (psi_values_null - min(psi_values_null)) / (max(psi_values_null) - min(psi_values_null))
 
-# Peak value of the alpha Parameter
-temp_peak_alpha_null <- (tmin_alpha_null + tmax_alpha_null) / 2
-peak_alpha_null <- estimate_alpha(temp_peak_alpha_null, q_alpha, tmin_alpha_null, tmax_alpha_null)
+# Peak value of the psi Parameter
+temp_peak_psi_null <- (tmin_psi_null + tmax_psi_null) / 2
+peak_psi_null <- estimate_psi(temp_peak_psi_null, q_psi, tmin_psi_null, tmax_psi_null)
 ```
 
 Set the Temperatures we want to check individual simulations: 
@@ -345,33 +328,32 @@ temp_checks <- c(9.5, 12.5, 15.5)
 temp_check_data <- data.frame(Temperature = temp_checks)
 ```
 
-
 #### Now we can plot the scenarios: 
 ```{r, fig.height = 10, fig.width = 5, warning=FALSE}
 param_function_plot_data <- data.frame(
   Temperature = rep(temperatures, 5), 
   Normalized_Phi = c(norm_phi_high, norm_phi_mid1, norm_phi_mid2, norm_phi_mid3, norm_phi_null), 
-  Normalized_Alpha = c(norm_alpha_high, norm_alpha_mid1, norm_alpha_mid2, norm_alpha_mid3, norm_alpha_null),
+  Normalized_Psi = c(norm_psi_high, norm_psi_mid1, norm_psi_mid2, norm_psi_mid3, norm_psi_null),
   Scenario = factor(rep(c("High Mismatch", "Mid 1 Mismatch", "Mid 2 Mismatch", "Mid 3 Mismatch", "No Mismatch"), each = length(temperatures)))
 )
 
 optimal_temps <- data.frame(
   Scenario = factor(c("High Mismatch", "Mid 1 Mismatch", "Mid 2 Mismatch", "Mid 3 Mismatch", "No Mismatch")),
   Temp_Peak_Phi_opt = c(temp_peak_phi_high, temp_peak_phi_mid1, temp_peak_phi_mid2, temp_peak_phi_mid3, temp_peak_phi_null),
-  Temp_Peak_Alpha_opt = c(temp_peak_alpha_high, temp_peak_alpha_mid1, temp_peak_alpha_mid2, temp_peak_alpha_mid3, temp_peak_alpha_null)
+  Temp_Peak_Psi_opt = c(temp_peak_psi_high, temp_peak_psi_mid1, temp_peak_psi_mid2, temp_peak_psi_mid3, temp_peak_psi_null)
 )
 
 # pivot for ggplot
 param_function_plot_data_long <- param_function_plot_data %>% 
-  pivot_longer(cols = c(Normalized_Phi, Normalized_Alpha), 
+  pivot_longer(cols = c(Normalized_Phi, Normalized_Psi), 
                names_to = "Parameter", values_to = "Normalized_Value")
 
 quad_param_plot_data <- merge(param_function_plot_data_long, optimal_temps, by = "Scenario")
 quad_param_plot_data$Parameter <- factor(quad_param_plot_data$Parameter, 
-                                          levels = c("Normalized_Phi", "Normalized_Alpha"))
+                                          levels = c("Normalized_Phi", "Normalized_Psi"))
 
 # Create the plot
-quad_param_plot <- ggplot(quad_param_plot_data, 
+quad_param_plot2 <- ggplot(quad_param_plot_data, 
                           aes(x = Temperature, y = Normalized_Value, color = Parameter)) + 
   geom_line(linewidth = 1) + 
   facet_wrap(~ Scenario, ncol = 1,
@@ -380,8 +362,8 @@ quad_param_plot <- ggplot(quad_param_plot_data,
                                               "Mid 1 Mismatch" = "Mid 1 Mismatch (4.5°C difference)", 
                                               "Mid 2 Mismatch" = "Mid 2 Mismatch (3°C difference)",
                                               "Mid 3 Mismatch" = "Mid 3 Mismatch (1.5°C difference)"))) +
-  scale_color_manual(values = c("Normalized_Phi" = "red", "Normalized_Alpha" = "blue"),
-                     labels = c("Phi (Virus)", "Alpha (Host)")) + 
+  scale_color_manual(values = c("Normalized_Phi" = "red", "Normalized_Psi" = "blue"),
+                     labels = c("Phi (Virus)", "Psi (Host)")) + 
   geom_vline(data = temp_check_data, aes(xintercept = Temperature), 
              linetype = "dashed", color = "black", alpha = 0.8) +
   geom_text(data = temp_check_data, 
@@ -404,15 +386,13 @@ quad_param_plot <- ggplot(quad_param_plot_data,
         axis.text = element_text(size = 12),
         legend.text = element_text(size = 12))
 
-quad_param_plot
+quad_param_plot2
 
 #ggsave("Figures/quad_param_plot.pdf", plot = quad_param_plot,
 #       device = "pdf", width = 5, height = 10)
 ```
 
-# Running the Model (Multiple Temperatures and Multiple Scenarios)
-
-First, setup the code to run model simulations. Then use the parameter values (for phi and alpha) calculated above to run the model at the different scenarios and along the thermal gradient. 
+# Run the model: 
 
 Initial setup of universal variables/parameters: 
 ```{r}
@@ -448,7 +428,7 @@ results_high <- list()
 param_values_high <- data.frame(
   Temperature = numeric(),
   Phi = numeric(),
-  Alpha = numeric()
+  Psi = numeric()
 )
 
 # Loop through each set temperature for high mismatch scenario: 
@@ -456,21 +436,21 @@ for (temp in temp_checks) {
   
   # Temp-specific parameters: 
   phi_high <- estimate_phi(temp, q_phi, tmin_phi_high, tmax_phi_high)
-  alpha_high <- estimate_alpha(temp, q_phi, tmin_alpha_high, tmax_alpha_high)
+  psi_high <- estimate_psi(temp, q_psi, tmin_psi_high, tmax_psi_high)
 
   # store parameters for later use
   param_values_high <- rbind(param_values_high, data.frame(
     Temperature = temp,
     Phi = phi_high,
-    Alpha = alpha_high
+    Psi = psi_high
   ))
 
   # All Parms: 
   params_high <- list(
     phi = phi_high,
-    alpha = alpha_high,
+    alpha = 2.65,
     delta = 1.29,            
-    psi = 0.91,              
+    psi = psi_high,              
     gamma = 0.13,            
     N_z = 1.29 * 0.35,       
     z_scalar = z_scalar
@@ -514,7 +494,7 @@ results_mid1 <- list()
 param_values_mid1 <- data.frame(
   Temperature = numeric(),
   Phi = numeric(),
-  Alpha = numeric()
+  Psi = numeric()
 )
 
 # Loop through each set temperature for mid 1 mismatch scenario: 
@@ -522,21 +502,21 @@ for (temp in temp_checks) {
   
   # Temp-specific parameters: 
   phi_mid1 <- estimate_phi(temp, q_phi, tmin_phi_mid1, tmax_phi_mid1)
-  alpha_mid1 <- estimate_alpha(temp, q_alpha, tmin_alpha_mid1, tmax_alpha_mid1)
+  psi_mid1 <- estimate_psi(temp, q_psi, tmin_psi_mid1, tmax_psi_mid1)
   
   # store parameters for later use
   param_values_mid1 <- rbind(param_values_mid1, data.frame(
   Temperature = temp,
   Phi = phi_mid1,
-  Alpha = alpha_mid1
+  Psi = psi_mid1
 ))
   
   # All Parms: 
   params_mid1 <- list(
     phi = phi_mid1,
-    alpha = alpha_mid1,
+    alpha = 2.65,
     delta = 1.29,            
-    psi = 0.91,              
+    psi = psi_mid1,              
     gamma = 0.13,            
     N_z = 1.29 * 0.35,       
     z_scalar = z_scalar
@@ -579,7 +559,7 @@ results_mid2 <- list()
 param_values_mid2 <- data.frame(
   Temperature = numeric(),
   Phi = numeric(),
-  Alpha = numeric()
+  Psi = numeric()
 )
 
 # Loop through each set temperature for mid 2 mismatch scenario: 
@@ -587,21 +567,21 @@ for (temp in temp_checks) {
   
   # Temp-specific parameters: 
   phi_mid2 <- estimate_phi(temp, q_phi, tmin_phi_mid2, tmax_phi_mid2)
-  alpha_mid2 <- estimate_alpha(temp, q_alpha, tmin_alpha_mid2, tmax_alpha_mid2)
+  psi_mid2 <- estimate_psi(temp, q_psi, tmin_psi_mid2, tmax_psi_mid2)
   
   # store parameters for later use
   param_values_mid2 <- rbind(param_values_mid2, data.frame(
   Temperature = temp,
   Phi = phi_mid2,
-  Alpha = alpha_mid2
+  Psi = psi_mid2
 ))
   
   # All Parms: 
   params_mid2 <- list(
     phi = phi_mid2,
-    alpha = alpha_mid2,
+    alpha = 2.65,
     delta = 1.29,            
-    psi = 0.91,              
+    psi = psi_mid2,              
     gamma = 0.13,            
     N_z = 1.29 * 0.35,       
     z_scalar = z_scalar
@@ -643,7 +623,7 @@ results_mid3 <- list()
 param_values_mid3 <- data.frame(
   Temperature = numeric(),
   Phi = numeric(),
-  Alpha = numeric()
+  Psi = numeric()
 )
 
 # Loop through each set temperature for mid 3 mismatch scenario: 
@@ -651,21 +631,21 @@ for (temp in temp_checks) {
   
   # Temp-specific parameters: 
   phi_mid3 <- estimate_phi(temp, q_phi, tmin_phi_mid3, tmax_phi_mid3)
-  alpha_mid3 <- estimate_alpha(temp, q_alpha, tmin_alpha_mid3, tmax_alpha_mid3)
+  psi_mid3 <- estimate_psi(temp, q_psi, tmin_psi_mid3, tmax_psi_mid3)
   
   # store parameters for later use
   param_values_mid3 <- rbind(param_values_mid3, data.frame(
   Temperature = temp,
   Phi = phi_mid3,
-  Alpha = alpha_mid3
+  Psi = psi_mid3
 ))
   
   # All Parms: 
   params_mid3 <- list(
     phi = phi_mid3,
-    alpha = alpha_mid3,
+    alpha = 2.65,
     delta = 1.29,            
-    psi = 0.91,              
+    psi = psi_mid3,              
     gamma = 0.13,            
     N_z = 1.29 * 0.35,       
     z_scalar = z_scalar
@@ -707,28 +687,28 @@ results_null <- list()
 param_values_null <- data.frame(
   Temperature = numeric(),
   Phi = numeric(),
-  Alpha = numeric()
+  Psi = numeric()
 )
 
 # Loop through each set temperature for mid 2 mismatch scenario: 
 for (temp in temp_checks) {
   # Temp-specific parameters: 
   phi_null <- estimate_phi(temp, q_phi, tmin_phi_null, tmax_phi_null)
-  alpha_null <- estimate_alpha(temp, q_alpha, tmin_alpha_null, tmax_alpha_null)
+  psi_null <- estimate_psi(temp, q_psi, tmin_psi_null, tmax_psi_null)
   
   # store parameters for later use
   param_values_null <- rbind(param_values_null, data.frame(
   Temperature = temp,
   Phi = phi_null,
-  Alpha = alpha_null
+  Psi = psi_null
 ))
   
   # All Parms: 
   params_null <- list(
     phi = phi_null,
-    alpha = alpha_null,
+    alpha = 2.65,
     delta = 1.29,            
-    psi = 0.91,              
+    psi = psi_null,              
     gamma = 0.13,            
     N_z = 1.29 * 0.35,       
     z_scalar = z_scalar
@@ -771,8 +751,6 @@ all_param_values <- rbind(
   cbind(Scenario = "No Mismatch", param_values_null)
 )
 ```
-
-
 
 #### Create plot with all results (5 Scenarios, 3 Temps each)
 ```{r}
@@ -858,14 +836,7 @@ scenario_by_temp_plot_individualsims
 #       device = "pdf", width = 10, height = 10)
 ```
 
-
-# Track the Proportion of deaths across thermal gradient and coefficient of variation in clearance days, entropy:
-
-These code blocks will track the proportion of death at each temperature along the sequence, as well as the coefficient of variation in days in which the host clears the pathogen (return NA if no clearance events), as well as the coefficient of variation in death binary(0 no, 1 yes). also trying  entropy to quantify variability. The entropy is defined as the probability-weighted average of the logarithmic probabilities for all possible values (natural log is 'nats' unit):
-
-$$
- \textbf{Entropy} \Rightarrow H(X) = - \sum p(x) * log (p(x))
-$$
+# Tracking outcomes across thermal gradient:
 
 Smaller temp range: 
 ```{r}
@@ -883,7 +854,7 @@ pd_cd_results_high <- data.frame(Temperature = temperatures_smaller,
                                  Prop_Death_CoefVar = NA,
                                  Crossing_Temperature = NA,
                                  Phi = NA,
-                                 Alpha = NA)
+                                 Psi = NA)
 
 # Loop through each temperature
 for (temp_idx in seq_along(temperatures_smaller)) {
@@ -891,17 +862,17 @@ for (temp_idx in seq_along(temperatures_smaller)) {
   
   # Temp-specific parameters
   phi_high <- estimate_phi(temp, q_phi, tmin_phi_high, tmax_phi_high)
-  alpha_high <- estimate_alpha(temp, q_alpha, tmin_alpha_high, tmax_alpha_high)
+  psi_high <- estimate_psi(temp, q_psi, tmin_psi_high, tmax_psi_high)
   
   pd_cd_results_high$Phi[temp_idx] <- phi_high
-  pd_cd_results_high$Alpha[temp_idx] <- alpha_high
+  pd_cd_results_high$Psi[temp_idx] <- psi_high
   
   # All parameters
   params_high <- list(
     phi = phi_high,
-    alpha = alpha_high,
+    alpha = 2.65,
     delta = 1.29,            
-    psi = 0.91,              
+    psi = psi_high,              
     gamma = 0.13,            
     N_z = 1.29 * 0.35,       
     z_scalar = z_scalar
@@ -1016,7 +987,7 @@ pd_cd_results_mid1 <- data.frame(Temperature = temperatures_smaller,
                                  Prop_Death_CoefVar = NA,
                                  Crossing_Temperature = NA,
                                  Phi = NA,
-                                 Alpha = NA)
+                                 Psi = NA)
 
 # Loop through each temperature
 for (temp_idx in seq_along(temperatures_smaller)) {
@@ -1024,17 +995,17 @@ for (temp_idx in seq_along(temperatures_smaller)) {
   
   # Temp-specific parameters
   phi_mid1 <- estimate_phi(temp, q_phi, tmin_phi_mid1, tmax_phi_mid1)
-  alpha_mid1 <- estimate_alpha(temp, q_alpha, tmin_alpha_mid1, tmax_alpha_mid1)
+  psi_mid1 <- estimate_psi(temp, q_psi, tmin_psi_mid1, tmax_psi_mid1)
   
   pd_cd_results_mid1$Phi[temp_idx] <- phi_mid1
-  pd_cd_results_mid1$Alpha[temp_idx] <- alpha_mid1
+  pd_cd_results_mid1$Psi[temp_idx] <- psi_mid1
   
   # All parameters
   params_mid1 <- list(
     phi = phi_mid1,
-    alpha = alpha_mid1,
+    alpha = 2.65,
     delta = 1.29,            
-    psi = 0.91,              
+    psi = psi_mid1,              
     gamma = 0.13,            
     N_z = 1.29 * 0.35,       
     z_scalar = z_scalar
@@ -1136,7 +1107,6 @@ for (temp_idx in seq_along(temperatures_smaller)) {
 
 ```
 
-
 #### Mid 2 Mismatch: 
 ```{r, warning=FALSE}
 # Data frame to store both metrics for mid2 mismatch
@@ -1147,7 +1117,7 @@ pd_cd_results_mid2 <- data.frame(Temperature = temperatures_smaller,
                                  Prop_Death_CoefVar = NA,
                                  Crossing_Temperature = NA,
                                  Phi = NA,
-                                 Alpha = NA)
+                                 Psi = NA)
 
 # Loop through each temperature
 for (temp_idx in seq_along(temperatures_smaller)) {
@@ -1155,17 +1125,17 @@ for (temp_idx in seq_along(temperatures_smaller)) {
   
   # Temp-specific parameters
   phi_mid2 <- estimate_phi(temp, q_phi, tmin_phi_mid2, tmax_phi_mid2)
-  alpha_mid2 <- estimate_alpha(temp, q_alpha, tmin_alpha_mid2, tmax_alpha_mid2)
+  psi_mid2 <- estimate_psi(temp, q_psi, tmin_psi_mid2, tmax_psi_mid2)
   
   pd_cd_results_mid2$Phi[temp_idx] <- phi_mid2
-  pd_cd_results_mid2$Alpha[temp_idx] <- alpha_mid2
+  pd_cd_results_mid2$Psi[temp_idx] <- psi_mid2
   
   # All parameters
   params_mid2 <- list(
     phi = phi_mid2,
-    alpha = alpha_mid2,
+    alpha = 2.65,
     delta = 1.29,            
-    psi = 0.91,              
+    psi = psi_mid2,              
     gamma = 0.13,            
     N_z = 1.29 * 0.35,       
     z_scalar = z_scalar
@@ -1278,7 +1248,7 @@ pd_cd_results_mid3 <- data.frame(Temperature = temperatures_smaller,
                                  Prop_Death_CoefVar = NA,
                                  Crossing_Temperature = NA,
                                  Phi = NA,
-                                 Alpha = NA)
+                                 Psi = NA)
 
 # Loop through each temperature
 for (temp_idx in seq_along(temperatures_smaller)) {
@@ -1286,17 +1256,17 @@ for (temp_idx in seq_along(temperatures_smaller)) {
   
   # Temp-specific parameters
   phi_mid3 <- estimate_phi(temp, q_phi, tmin_phi_mid3, tmax_phi_mid3)
-  alpha_mid3 <- estimate_alpha(temp, q_alpha, tmin_alpha_mid3, tmax_alpha_mid3)
+  psi_mid3 <- estimate_psi(temp, q_psi, tmin_psi_mid3, tmax_psi_mid3)
   
   pd_cd_results_mid3$Phi[temp_idx] <- phi_mid3
-  pd_cd_results_mid3$Alpha[temp_idx] <- alpha_mid3
+  pd_cd_results_mid3$Psi[temp_idx] <- psi_mid3
   
   # All parameters
   params_mid3 <- list(
     phi = phi_mid3,
-    alpha = alpha_mid3,
+    alpha = 2.65,
     delta = 1.29,            
-    psi = 0.91,              
+    psi = psi_mid3,              
     gamma = 0.13,            
     N_z = 1.29 * 0.35,       
     z_scalar = z_scalar
@@ -1410,7 +1380,7 @@ pd_cd_results_null <- data.frame(Temperature = temperatures_smaller,
                                  Prop_Death_CoefVar = NA,
                                  Crossing_Temperature = NA,
                                  Phi = NA,
-                                 Alpha = NA)
+                                 Psi = NA)
 
 # Loop through each temperature
 for (temp_idx in seq_along(temperatures_smaller)) {
@@ -1418,17 +1388,17 @@ for (temp_idx in seq_along(temperatures_smaller)) {
   
   # Temp-specific parameters
   phi_null <- estimate_phi(temp, q_phi, tmin_phi_null, tmax_phi_null)
-  alpha_null <- estimate_alpha(temp, q_alpha, tmin_alpha_null, tmax_alpha_null)
+  psi_null <- estimate_psi(temp, q_psi, tmin_psi_null, tmax_psi_null)
   
   pd_cd_results_null$Phi[temp_idx] <- phi_null
-  pd_cd_results_null$Alpha[temp_idx] <- alpha_null
+  pd_cd_results_null$Psi[temp_idx] <- psi_null
   
   # All parameters
   params_null <- list(
     phi = phi_null,
-    alpha = alpha_null,
+    alpha = 2.65,
     delta = 1.29,            
-    psi = 0.91,              
+    psi = psi_null,              
     gamma = 0.13,            
     N_z = 1.29 * 0.35,       
     z_scalar = z_scalar
@@ -1569,7 +1539,7 @@ death_data$Legend_Label <- "Proportion of Deaths"
 death_plot <- ggplot(death_data, aes(x = Temperature, y = Proportion_Deaths, color = Legend_Label)) +
   geom_line(linewidth = 1) +
   geom_hline(yintercept = 0.5, linetype = "dashed", color = "black", linewidth = 0.8) +
-  geom_blank(aes(y = 0.5, color = "50% of Simulations Die")) + # Dummy geom
+  geom_blank(aes(y = 0.5, color = "50% of Simulations Die")) + 
   scale_color_manual(values = c("Proportion of Deaths" = "red", "50% of Simulations Die" = "black")) +
   facet_wrap(~ Scenario, ncol = 1) +
   geom_vline(aes(xintercept = Crossing_Temperature), data = death_data, 
@@ -1590,8 +1560,7 @@ death_plot
 #       device = "pdf", width = 7, height = 10)
 ```
 
-
-# Plot the ENTROPY for each thermal mismatch scenario
+#### Plot the ENTROPY for each thermal mismatch scenario
 ```{r, fig.height=10, fig.width = 6, warning=FALSE}
 # data frame for all results and easier ggplotting
 ent_data <- data.frame(
@@ -1637,79 +1606,10 @@ ent_plot
  #      device = "pdf", width = 6, height = 10)
 ```
 
-#### Plots for coefficient of variation:
-
-First, for the Coefficient of variation for the clearance days: 
-```{r, fig.height=8, fig.width=6}
-# Data frame for CV results
-cv_data <- data.frame(
-  Temperature = rep(temperatures_smaller, times = 5),
-  Coef_Variation = c(pd_cd_results_high$Coef_Variation,
-                     pd_cd_results_mid1$Coef_Variation,
-                     pd_cd_results_mid2$Coef_Variation,
-                     pd_cd_results_mid3$Coef_Variation,
-                     pd_cd_results_null$Coef_Variation),
-  Scenario = rep(c("High Mismatch", "Mid 1 Mismatch", "Mid 2 Mismatch", "Mid 3 Mismatch", "No Mismatch"), each = length(temperatures_smaller))
-)
-
-cv_data$Legend_Label <- "Coefficient of Variation"
-
-# Create the facet-wrapped plot for CV
-cv_plot <- ggplot(cv_data, aes(x = Temperature, y = Coef_Variation, color = Legend_Label)) +
-  geom_line(linewidth = 1) +
-  facet_wrap(~ Scenario, ncol = 1) +
-  scale_color_manual(values = c("Coefficient of Variation" = "red")) + 
-  theme_bw() +
-  labs(x = "Temperature (°C)", y = "Coefficient of Variation",
-       color = NULL, title = "Variability in Clearance Day") + 
-  theme(strip.text = element_text(size = 15),
-        legend.position = "bottom",
-        plot.title = element_text(hjust = 0.5, size = 18, face = "bold"),
-        axis.title = element_text(size = 15),
-        axis.text = element_text(size = 13),
-        legend.text = element_text(size = 13))
-
-cv_plot
-```
-
-Now for Coefficient of Variation for Proportion of deaths:
-```{r, fig.height=8, fig.width=6, warning=FALSE}
-# Data frame for CV results
-prop_death_cv_data <- data.frame(
-  Temperature = rep(temperatures_smaller, times = 5),
-  Prop_Death_CoefVar = c(pd_cd_results_high$Prop_Death_CoefVar,
-                     pd_cd_results_mid1$Prop_Death_CoefVar,
-                     pd_cd_results_mid2$Prop_Death_CoefVar,
-                     pd_cd_results_mid3$Prop_Death_CoefVar,
-                     pd_cd_results_null$Prop_Death_CoefVar),
-  Scenario = rep(c("High Mismatch", "Mid 1 Mismatch", "Mid 2 Mismatch", "Mid 3 Mismatch", "No Mismatch"), each = length(temperatures_smaller))
-)
-
-prop_death_cv_data$Legend_Label <- "Coefficient of Variation"
-
-# Create the facet-wrapped plot for CV
-prop_death_cv_plot <- ggplot(prop_death_cv_data, aes(x = Temperature, y = Prop_Death_CoefVar, color = Legend_Label)) +
-  geom_line(linewidth = 1) +
-  facet_wrap(~ Scenario, ncol = 1) +
-  scale_color_manual(values = c("Coefficient of Variation" = "red")) + 
-  theme_bw() +
-  labs(x = "Temperature (°C)", y = "Coefficient of Variation",
-       color = NULL, title = "Variability in Proportion of Deaths") + 
-  theme(strip.text = element_text(size = 15),
-        legend.position = "bottom",
-        plot.title = element_text(hjust = 0.5, size = 18, face = "bold"),
-        axis.title = element_text(size = 15),
-        axis.text = element_text(size = 13),
-        legend.text = element_text(size = 13))
-
-prop_death_cv_plot
-```
-
-
 
 # Display all plots side by side: 
 ```{r}
-p1 <- quad_param_plot
+p1 <- quad_param_plot2
 p2 <- scenario_by_temp_plot_individualsims
 p3 <- death_plot
 p4 <- ent_plot
@@ -1721,6 +1621,7 @@ prop1 <- widths[1] / total_width
 prop2 <- (widths[1] + widths[2]) / total_width
 prop3 <- (widths[1] + widths[2] + widths[3]) / total_width
 ```
+
 
 #### Plot with all individual simulations
 ```{r, warning=FALSE, fig.height=15, fig.width=25}
@@ -1743,30 +1644,29 @@ invisible(all_plots_individual_sims)
 #       device = "pdf", width = 25, height = 15)
 ```
 
-
-# Plot for Heatmap of the Entropy of Model Outcomes with different values of Phi and Alpha
+# Plot for Heatmap of the Entropy of Model Outcomes with different values of Phi and Psi
 
 This chunk takes a while to run, 25 x 25 parameter combinations with 100 simulations each....
 ```{r, warning = FALSE}
 # Define synthetic range for phi and alpha
 phi_vals_hm <- seq(2.25, 2.9, length.out = 25)
-alpha_vals_hm <- seq(2.25, 2.9, length.out = 25)
+psi_vals_hm <- seq(0.8, 1.05, length.out = 25)
 
 # Dataframe for grid results
-death_prop_grid <- expand.grid(phi = phi_vals_hm, alpha = alpha_vals_hm)
+death_prop_grid <- expand.grid(phi = phi_vals_hm, psi = psi_vals_hm)
 death_prop_grid$Entropy <- NA
 
 # Model run looping through all param combinations
 for (i in seq_len(nrow(death_prop_grid))) {
   phi <- death_prop_grid$phi[i]
-  alpha <- death_prop_grid$alpha[i]
+  psi <- death_prop_grid$psi[i]
   
   # Set all params
   params <- list(
     phi = phi,
-    alpha = alpha, 
+    alpha = 2.65, 
     delta = 1.29,
-    psi = 0.91,
+    psi = psi,
     gamma = 0.13,
     N_z = 1.29 * 0.35, 
     z_scalar = z_scalar
@@ -1848,15 +1748,15 @@ all_param_gradient <- all_param_gradient %>%
   filter(Scenario %in% c("High Mismatch", "Mid 1 Mismatch", "Mid 2 Mismatch", "Mid 3 Mismatch", "No Mismatch"))
 
 # Create a separate data frame for the heatmap
-heatmap_data <- death_prop_grid[, c("phi", "alpha", "Entropy")]
+heatmap_data <- death_prop_grid[, c("phi", "psi", "Entropy")]
 
-phi_alpha_range_plot <- ggplot(heatmap_data, aes(x = phi, y = alpha, fill = Entropy)) +
+phi_psi_range_plot <- ggplot(heatmap_data, aes(x = phi, y = psi, fill = Entropy)) +
   geom_tile() +
-  scale_fill_viridis_c(option = "viridis", direction = -1) +
+  scale_fill_viridis_c(option = "mako", direction = -1) +
   theme_bw() +
   labs(title = "Outcome Variability across a Range of Parameter Values",
        x = expression(paste("Viral Replication Rate (", phi, ") Range")),
-       y = expression(paste("Mass-Action Attack Rate ( ", alpha, ") Range")),
+       y = expression(paste("Immune Response Growth Rate ( ", psi, ") Range")),
        fill = "Entropy") +
   theme(plot.title = element_text(size = 17, hjust = 0.5, face = "bold"),
         axis.title = element_text(size = 15),
@@ -1865,7 +1765,7 @@ phi_alpha_range_plot <- ggplot(heatmap_data, aes(x = phi, y = alpha, fill = Entr
         legend.title = element_text(size = 13, face = "bold"),
         legend.text = element_text(size = 12)) +
 
-  geom_path(data = all_param_gradient, aes(x = Phi, y = Alpha, color = Scenario),
+  geom_path(data = all_param_gradient, aes(x = Phi, y = Psi, color = Scenario),
               se = FALSE, linewidth = 1.35, inherit.aes = FALSE) +
   labs(color = "Parameter Values from 9°C-16°C") +
   scale_color_manual(values = c(
@@ -1876,116 +1776,13 @@ phi_alpha_range_plot <- ggplot(heatmap_data, aes(x = phi, y = alpha, fill = Entr
     "No Mismatch" = "pink"
   ))
 
-phi_alpha_range_plot
-
-#ggsave("Figures/phi_alpha_range_plot.pdf", plot = phi_alpha_range_plot,
-#       device = "pdf", width = 10, height = 7)
-```
-
-# Plot for Heatmap of Entropy of Model Outcomes with different values of Phi and Psi
-
-This chunk takes a while to run, 25 x 25 parameter combinations with 100 simulations each....
-```{r, warning = FALSE}
-# Define synthetic range for phi and alpha
-phi_vals_hm <- seq(2.25, 2.65, length.out = 25)
-psi_vals_hm <- seq(0.9, 1.15, length.out = 25)
-
-# Dataframe for grid results
-death_prop_grid2 <- expand.grid(phi = phi_vals_hm, psi = psi_vals_hm)
-death_prop_grid2$Entropy <- NA
-
-# Model run looping through all param combinations
-for (i in seq_len(nrow(death_prop_grid2))) {
-  phi <- death_prop_grid2$phi[i]
-  psi <- death_prop_grid2$psi[i]
-  
-  # Set all params
-  params <- list(
-    phi = phi,
-    alpha = 1.9, 
-    delta = 1.29,
-    psi = psi,
-    gamma = 0.13,
-    N_z = 1.29 * 0.35, 
-    z_scalar = z_scalar
-  )
-  
-  death_count <- 0
-  clearance_days <- numeric(num_sims) 
-  
-  for(sim in 1:num_sims) {
-    hm_sim_results <- model_simulation(
-      V_vec = V_vec,
-      Z_vec = Z_vec, 
-      params = params, 
-      death_threshold = death_threshold,
-      clearance_threshold = clearance_threshold
-    )
-    
-    # Check for death
-    if (max(hm_sim_results$V_vec, na.rm = TRUE) >= death_threshold) {
-      death_count <- death_count + 1
-      clearance_days[sim] <- NA
-    } else {
-      clearance_day <- which(hm_sim_results$V_vec == 0)[1]
-      clearance_days[sim] <- ifelse(length(clearance_day) > 0, clearance_day, NA)
-    }
-  }
-  
-  # Compute proportions
-  clearance_count <- sum(!is.na(clearance_days))
-  death_proportion <- round(death_count / num_sims, 5)
-  clearance_proportion <- round(clearance_count / num_sims, 5)
-  persist_proportion <- round(1 - death_proportion - clearance_proportion, 5)
-  
-  # Initialize entropy
-  entropy <- 0  
-
-
-  # Avoid log(0) issues
-  safe_log <- function(x) ifelse(x >= 0.001, log(x), 0)
-
-  # Calculate entropy 
-  if (persist_proportion <= 0.01) {
-      if (death_proportion <= 0.01 || clearance_proportion <= 0.01) {
-        entropy <- 0 # Entropy is 0 if all outcomes are the same
-      } else {
-        entropy <- - (death_proportion * safe_log(death_proportion) + 
-                      clearance_proportion * safe_log(clearance_proportion))
-      }
-  } else {
-      entropy <- - (death_proportion * safe_log(death_proportion) + 
-                    clearance_proportion * safe_log(clearance_proportion) +
-                    persist_proportion * safe_log(persist_proportion))
-  }
-  
-  # Store entropy
-  death_prop_grid2$Entropy[i] <- entropy
-}
-```
-
-#### Plot (Heatmap with geom_tile)
-```{r, warning=FALSE, fig.height=7, fig.width=7}
-phi_psi_range_plot <- ggplot(death_prop_grid2, 
-                               aes(x = phi, y = psi, fill = Entropy)) +
-  geom_tile() + 
-  scale_fill_viridis_c(option = "mako", direction = -1) + 
-  theme_bw() + 
-  labs(title = "Outcome Variability across a Range of Parameter Values",
-       x = expression(paste("Viral Replication Rate (", Phi, ") Range")),  
-       y = expression(paste("Immune Response Growth Rate (", psi, ") Range")), 
-       fill = "Entropy") + 
-  theme(plot.title = element_text(size = 16, hjust = 0.5, face = "bold"),
-        axis.title = element_text(size = 14),
-        axis.text = element_text(size = 12),
-        legend.position = "right", 
-        legend.title = element_text(size = 14),
-        legend.text = element_text(size = 14))
-
 phi_psi_range_plot
 
 #ggsave("Figures/phi_psi_range_plot.pdf", plot = phi_psi_range_plot,
-#       device = "pdf", width = 8, height = 8)
+#       device = "pdf", width = 10, height = 7)
 ```
+
+
+
 
 
