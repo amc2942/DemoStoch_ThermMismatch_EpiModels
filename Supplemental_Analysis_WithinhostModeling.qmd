@@ -1239,7 +1239,7 @@ for (temp_idx in seq_along(temperatures_smaller)) {
 
 #### Mid 3 Mismatch: 
 ```{r, warning=FALSE}
-set.seed(12)
+set.seed(1)
 # Data frame to store both metrics for mid3 mismatch
 pd_cd_results_mid3 <- data.frame(Temperature = temperatures_smaller, 
                                  Proportion_Deaths = NA, 
@@ -1640,7 +1640,7 @@ grid.lines(x = c(prop3, prop3), y = c(0, 1),
            gp = gpar(col = "black", lwd = 2))
 invisible(all_plots_individual_sims)
 
-#ggsave("Figures/FullFigure.pdf", plot = all_plots_individual_sims, 
+#ggsave("Figures/FullFigure_PhiPsi_supp.pdf", plot = all_plots_individual_sims, 
 #       device = "pdf", width = 25, height = 15)
 ```
 
@@ -1778,7 +1778,7 @@ phi_psi_range_plot <- ggplot(heatmap_data, aes(x = phi, y = psi, fill = Entropy)
 
 phi_psi_range_plot
 
-#ggsave("Figures/phi_psi_range_plot.pdf", plot = phi_psi_range_plot,
+#ggsave("Figures/phi_psi_range_plot_supp.pdf", plot = phi_psi_range_plot,
 #       device = "pdf", width = 10, height = 7)
 ```
 
