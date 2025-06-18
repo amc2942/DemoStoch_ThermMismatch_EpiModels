@@ -392,17 +392,17 @@ quad_param_plot <- ggplot(quad_param_plot_data,
             vjust = 0,   # Center labels vertically
             angle = 0,     # Remove angle
             color = "black", 
-            size = 4) +
+            size = 4.5) +
   xlim(4,21) + 
   theme_bw() + 
   labs(x = "Temperature (°C)", y = "Parameter Values (Normalized)", 
-       color = "Parameter:", title = "A. Thermal Mismatch Scenarios") +
-  theme(strip.text = element_text(size = 13), 
+       color = " ", title = "A. Thermal Mismatch Scenarios") +
+  theme(strip.text = element_text(size = 17), 
         legend.position = "bottom",
-        plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
-        axis.title = element_text(size = 14),
-        axis.text = element_text(size = 12),
-        legend.text = element_text(size = 12))
+        plot.title = element_text(hjust = 0.5, size = 22, face = "bold"),
+        axis.title = element_text(size = 18),
+        axis.text = element_text(size = 17),
+        legend.text = element_text(size = 17))
 
 quad_param_plot
 
@@ -834,9 +834,9 @@ scenario_by_temp_plot_individualsims <- ggplot(individual_simulations, aes(x = D
                                  Scenario = function(x) paste0(x, " Mismatch"))) + 
   # Aesthetics:
   scale_color_manual(
-    name = "Simulation: ",
+    name = " ",
     values = c("V_vec" = "red", "Z_vec" = "blue"),
-    labels = c("Viral Cell Load", "Immune Cell Load")
+    labels = c("Viral Cell Load [V]", "Immune Cell Load [Z]")
   ) + 
   labs(title = "B. Results by Mismatch Scenario and Temp. (100 Simulations)",
        x = "Days", 
@@ -845,12 +845,12 @@ scenario_by_temp_plot_individualsims <- ggplot(individual_simulations, aes(x = D
   theme(legend.position = "bottom", 
         legend.box = "horizontal",
         panel.grid = element_line(color = "gray90"),
-        plot.title = element_text(hjust = 0.5, size = 18, face = "bold"),
-        axis.title = element_text(size = 15),
-        axis.text = element_text(size = 13),
-        strip.text = element_text(size = 13),
-        legend.text = element_text(size = 13),
-        legend.title = element_text(size = 13))
+        plot.title = element_text(hjust = 0.5, size = 22, face = "bold"),
+        axis.title = element_text(size = 19),
+        axis.text = element_text(size = 17),
+        strip.text = element_text(size = 16),
+        legend.text = element_text(size = 17),
+        legend.title = element_text(size = 17))
 
 scenario_by_temp_plot_individualsims
 
@@ -1570,19 +1570,19 @@ death_plot <- ggplot(death_data, aes(x = Temperature, y = Proportion_Deaths, col
   geom_line(linewidth = 1) +
   geom_hline(yintercept = 0.5, linetype = "dashed", color = "black", linewidth = 0.8) +
   geom_blank(aes(y = 0.5, color = "50% of Simulations Die")) + # Dummy geom
-  scale_color_manual(values = c("Proportion of Deaths" = "red", "50% of Simulations Die" = "black")) +
+  scale_color_manual(values = c("Proportion of Deaths" = "purple", "50% of Simulations Die" = "black")) +
   facet_wrap(~ Scenario, ncol = 1) +
   geom_vline(aes(xintercept = Crossing_Temperature), data = death_data, 
              linetype = "dashed", color = "black", linewidth = 0.8) + 
   theme_bw() +
   labs(x = "Temperature (°C)", y = "Proportion of Deaths",
        color = NULL, title = "C. Deaths Across Thermal Gradient") +
-  theme(strip.text = element_text(size = 15),
+  theme(strip.text = element_text(size = 19),
         legend.position = "bottom",
-        plot.title = element_text(hjust = 0.5, size = 18, face = "bold"),
-        axis.title = element_text(size = 15),
-        axis.text = element_text(size = 13),
-        legend.text = element_text(size = 13))
+        plot.title = element_text(hjust = 0.5, size = 22, face = "bold"),
+        axis.title = element_text(size = 19),
+        axis.text = element_text(size = 17),
+        legend.text = element_text(size = 17))
 
 death_plot
 
@@ -1618,18 +1618,18 @@ ent_plot <- ggplot(ent_data, aes(x = Temperature, y = Entropy, color = Legend_La
   geom_line(linewidth = 1) + 
   facet_wrap(~ Scenario, ncol = 1) + 
   geom_blank(aes(y = 0.5, color = "50% of Simulations Die")) + # Dummy geom
-  scale_color_manual(values = c("Entropy" = "blue", "50% of Simulations Die" = "black")) +
+  scale_color_manual(values = c("Entropy" = "forestgreen", "50% of Simulations Die" = "black")) +
   geom_vline(aes(xintercept = Crossing_Temperature), data = ent_data, 
              linetype = "dashed", color = "black", linewidth = 0.8) + 
   theme_bw() + 
   labs(x = "Temperature (°C)", y = "Entropy (nats)",
        color = NULL, title = "D. Outcome Variability (Entropy)") + 
-  theme(strip.text = element_text(size = 15),
+  theme(strip.text = element_text(size = 19),
         legend.position = "bottom",
-        plot.title = element_text(hjust = 0.5, size = 18, face = "bold"),
-        axis.title = element_text(size = 15),
-        axis.text = element_text(size = 13),
-        legend.text = element_text(size = 13))
+        plot.title = element_text(hjust = 0.5, size = 22, face = "bold"),
+        axis.title = element_text(size = 19),
+        axis.text = element_text(size = 17),
+        legend.text = element_text(size = 17))
 
 ent_plot
 
@@ -1645,7 +1645,7 @@ p3 <- death_plot
 p4 <- ent_plot
 
 # setting widths
-widths <- c(0.75, 1.6, 0.8, 0.8)
+widths <- c(1.0, 1.75, 1.1, 1.1)
 total_width <- sum(widths)
 prop1 <- widths[1] / total_width
 prop2 <- (widths[1] + widths[2]) / total_width
@@ -1653,7 +1653,7 @@ prop3 <- (widths[1] + widths[2] + widths[3]) / total_width
 ```
 
 #### Plot with all individual simulations
-```{r, warning=FALSE, fig.height=15, fig.width=25}
+```{r, warning=FALSE, fig.height=16, fig.width=27}
 all_plots_individual_sims <- gridExtra::grid.arrange(
   p1, p2, p3, p4,
   ncol = 4,
@@ -1670,7 +1670,7 @@ grid.lines(x = c(prop3, prop3), y = c(0, 1),
 invisible(all_plots_individual_sims)
 
 #ggsave("Figures/FullFigure.pdf", plot = all_plots_individual_sims, 
-#       device = "pdf", width = 25, height = 15)
+#       device = "pdf", width = 27, height = 16)
 ```
 
 
