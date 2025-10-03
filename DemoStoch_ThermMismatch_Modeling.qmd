@@ -64,7 +64,7 @@ $$
 temperatures <- seq(4, 21, length.out = 50)
 ```
 
-Estimating the Range of Parameter Phi (Viral Replication Rate)
+Estimating the Range of Parameter Phi (pathogen Replication Rate)
 ```{r}
 estimate_phi <- function(temperature, q_phi, tmin_phi, tmax_phi) {
   # Quadratic equation
@@ -381,7 +381,7 @@ quad_param_plot <- ggplot(quad_param_plot_data,
                                               "Mid 2 Mismatch" = "Mid 2 Mismatch (3°C difference)",
                                               "Mid 3 Mismatch" = "Mid 3 Mismatch (1.5°C difference)"))) +
   scale_color_manual(values = c("Normalized_Phi" = "red", "Normalized_Alpha" = "blue"),
-                     labels = c("Phi (Virus)", "Alpha (Host)")) + 
+                     labels = c("Phi (Pathogen)", "Alpha (Host)")) + 
   geom_vline(data = temp_check_data, aes(xintercept = Temperature), 
              linetype = "dashed", color = "black", alpha = 0.8) +
   geom_text(data = temp_check_data, 
@@ -470,7 +470,7 @@ for (temp in temp_checks) {
     phi = phi_high,
     alpha = alpha_high,
     delta = 1.29,            
-    psi = 0.91,              
+    psi = 0.92,              
     gamma = 0.13,            
     N_z = 1.29 * 0.35,       
     z_scalar = z_scalar
@@ -536,7 +536,7 @@ for (temp in temp_checks) {
     phi = phi_mid1,
     alpha = alpha_mid1,
     delta = 1.29,            
-    psi = 0.91,              
+    psi = 0.92,              
     gamma = 0.13,            
     N_z = 1.29 * 0.35,       
     z_scalar = z_scalar
@@ -601,7 +601,7 @@ for (temp in temp_checks) {
     phi = phi_mid2,
     alpha = alpha_mid2,
     delta = 1.29,            
-    psi = 0.91,              
+    psi = 0.92,              
     gamma = 0.13,            
     N_z = 1.29 * 0.35,       
     z_scalar = z_scalar
@@ -665,7 +665,7 @@ for (temp in temp_checks) {
     phi = phi_mid3,
     alpha = alpha_mid3,
     delta = 1.29,            
-    psi = 0.91,              
+    psi = 0.92,              
     gamma = 0.13,            
     N_z = 1.29 * 0.35,       
     z_scalar = z_scalar
@@ -728,7 +728,7 @@ for (temp in temp_checks) {
     phi = phi_null,
     alpha = alpha_null,
     delta = 1.29,            
-    psi = 0.91,              
+    psi = 0.92,              
     gamma = 0.13,            
     N_z = 1.29 * 0.35,       
     z_scalar = z_scalar
@@ -836,7 +836,7 @@ scenario_by_temp_plot_individualsims <- ggplot(individual_simulations, aes(x = D
   scale_color_manual(
     name = " ",
     values = c("V_vec" = "red", "Z_vec" = "blue"),
-    labels = c("Viral Cell Load [V]", "Immune Cell Load [Z]")
+    labels = c("Pathogen Cell Load [V]", "Immune Cell Load [Z]")
   ) + 
   labs(title = "B. Results by Mismatch Scenario and Temp. (100 Simulations)",
        x = "Days", 
@@ -901,7 +901,7 @@ for (temp_idx in seq_along(temperatures_smaller)) {
     phi = phi_high,
     alpha = alpha_high,
     delta = 1.29,            
-    psi = 0.91,              
+    psi = 0.92,              
     gamma = 0.13,            
     N_z = 1.29 * 0.35,       
     z_scalar = z_scalar
@@ -1034,7 +1034,7 @@ for (temp_idx in seq_along(temperatures_smaller)) {
     phi = phi_mid1,
     alpha = alpha_mid1,
     delta = 1.29,            
-    psi = 0.91,              
+    psi = 0.92,              
     gamma = 0.13,            
     N_z = 1.29 * 0.35,       
     z_scalar = z_scalar
@@ -1165,7 +1165,7 @@ for (temp_idx in seq_along(temperatures_smaller)) {
     phi = phi_mid2,
     alpha = alpha_mid2,
     delta = 1.29,            
-    psi = 0.91,              
+    psi = 0.92,              
     gamma = 0.13,            
     N_z = 1.29 * 0.35,       
     z_scalar = z_scalar
@@ -1269,7 +1269,7 @@ for (temp_idx in seq_along(temperatures_smaller)) {
 
 #### Mid 3 Mismatch: 
 ```{r, warning=FALSE}
-set.seed(12)
+set.seed(0)
 # Data frame to store both metrics for mid3 mismatch
 pd_cd_results_mid3 <- data.frame(Temperature = temperatures_smaller, 
                                  Proportion_Deaths = NA, 
@@ -1296,7 +1296,7 @@ for (temp_idx in seq_along(temperatures_smaller)) {
     phi = phi_mid3,
     alpha = alpha_mid3,
     delta = 1.29,            
-    psi = 0.91,              
+    psi = 0.895,              
     gamma = 0.13,            
     N_z = 1.29 * 0.35,       
     z_scalar = z_scalar
@@ -1428,7 +1428,7 @@ for (temp_idx in seq_along(temperatures_smaller)) {
     phi = phi_null,
     alpha = alpha_null,
     delta = 1.29,            
-    psi = 0.91,              
+    psi = 0.92,              
     gamma = 0.13,            
     N_z = 1.29 * 0.35,       
     z_scalar = z_scalar
@@ -1785,7 +1785,7 @@ phi_alpha_range_plot <- ggplot(heatmap_data, aes(x = phi, y = alpha, fill = Entr
   scale_fill_viridis_c(option = "viridis", direction = -1) +
   theme_bw() +
   labs(title = "Outcome Variability across a Range of Parameter Values",
-       x = expression(paste("Viral Replication Rate (", phi, ") Range")),
+       x = expression(paste("Pathogen Replication Rate (", phi, ") Range")),
        y = expression(paste("Mass-Action Attack Rate ( ", alpha, ") Range")),
        fill = "Entropy") +
   theme(plot.title = element_text(size = 17, hjust = 0.5, face = "bold"),
