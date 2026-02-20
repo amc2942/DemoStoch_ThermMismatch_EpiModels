@@ -1582,7 +1582,7 @@ death_plot <- ggplot(death_data, aes(x = Temperature, y = Proportion_Deaths, col
         plot.title = element_text(hjust = 0.5, size = 22, face = "bold"),
         axis.title = element_text(size = 19),
         axis.text = element_text(size = 17),
-        legend.text = element_text(size = 17))
+        legend.text = element_text(size = 16))
 
 death_plot
 
@@ -1808,8 +1808,8 @@ phi_alpha_range_plot <- ggplot(heatmap_data, aes(x = phi, y = alpha, fill = Entr
 
 phi_alpha_range_plot
 
-#ggsave("Figures/phi_alpha_range_plot.pdf", plot = phi_alpha_range_plot,
-#       device = "pdf", width = 10, height = 7)
+#ggsave("Figures/phi_alpha_range_plot.png", plot = phi_alpha_range_plot,
+#       device = "png", width = 10, height = 7, dpi = 300)
 ```
 
 
